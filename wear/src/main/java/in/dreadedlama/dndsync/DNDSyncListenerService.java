@@ -11,10 +11,8 @@ import android.os.VibrationEffect;
 import android.os.Vibrator;
 import android.provider.Settings;
 import android.util.Log;
-
 import androidx.annotation.NonNull;
 import androidx.preference.PreferenceManager;
-
 import com.google.android.gms.wearable.DataEvent;
 import com.google.android.gms.wearable.DataEventBuffer;
 import com.google.android.gms.wearable.WearableListenerService;
@@ -62,54 +60,51 @@ public class DNDSyncListenerService extends WearableListenerService {
         if (!useBedtimeMode) return;
 
         boolean usePowerSaverMode = prefs.getBoolean("power_saver_key", true);
-        if (usePowerSaverMode) setPowerSaveMode(bedTimeModeValue);
+        if (usePowerSaverMode) {
+            setPowerSaveMode(bedTimeModeValue);
+        }
 
         String manufacturer = android.os.Build.MANUFACTURER;
-        boolean bedtimeModeSuccess = Settings.Global.putInt(getContentResolver(), "bedtime_mode", bedTimeModeValue);
-        boolean zenModeSuccess = Settings.Global.putInt(getContentResolver(), "zen_mode", bedTimeModeValue);
+        boolean isSamsung = manufacturer.equalsIgnoreCase(SAMSUNG);
+
+        boolean bedtimeModeSuccess = true;
+        boolean zenModeSuccess = false;
         boolean samsungSuccess = true;
 
-        if (manufacturer.equalsIgnoreCase(SAMSUNG)) {
+        if (isSamsung) {
+            // Samsung Watch
+            zenModeSuccess = Settings.Global.putInt(getContentResolver(), "zen_mode", bedTimeModeValue);
             samsungSuccess = Settings.Global.putInt(getContentResolver(), "setting_bedtime_mode_running_state", bedTimeModeValue);
+
+        } else {
+            // Google / Pixel Watch
+            bedtimeModeSuccess = Settings.Global.putInt(getContentResolver(), "bedtime_mode", bedTimeModeValue);
+            zenModeSuccess = Settings.Global.putInt(getContentResolver(), "zen_mode", bedTimeModeValue);
         }
 
         if (bedtimeModeSuccess && zenModeSuccess && samsungSuccess) {
             Log.d(TAG, "Bedtime values written to system settings");
 
-            if (manufacturer.equalsIgnoreCase(SAMSUNG)) {
-                new Handler(Looper.getMainLooper()).postDelayed(this::launchSamsungBedtimeUIWithRetry, 4000); // slightly longer delay
+            if (isSamsung) {
+                new Handler(Looper.getMainLooper()).postDelayed(this::launchSamsungBedtimeUIWithRetry, 1500);
             }
         } else {
             Log.d(TAG, "Bedtime mode toggle failed");
         }
     }
-
     private void launchSamsungBedtimeUIWithRetry() {
         Intent intent = new Intent();
         intent.setComponent(new ComponentName(
                 "com.google.android.apps.wearable.settings",
                 "com.samsung.android.clockwork.settings.advanced.bedtimemode.StBedtimeModeReservedActivity"
         ));
-        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
 
-        if (intent.resolveActivity(getPackageManager()) != null) {
-            try {
-                startActivity(intent);
-                Log.d(TAG, "Bedtime mode activity launched");
-            } catch (Exception e) {
-                Log.e(TAG, "First launch failed, retrying in 2s", e);
-                // Retry after short delay
-                new Handler(Looper.getMainLooper()).postDelayed(() -> {
-                    try {
-                        startActivity(intent);
-                        Log.d(TAG, "Retried: Bedtime mode activity launched");
-                    } catch (Exception ex) {
-                        Log.e(TAG, "Second launch attempt also failed", ex);
-                    }
-                }, 2000);
-            }
-        } else {
-            Log.d(TAG, "Activity not found: BedtimeModeReservedActivity");
+        try {
+            startActivity(intent);
+            Log.d(TAG, "Samsung bedtime activity launch requested");
+        } catch (Exception e) {
+            Log.e(TAG, "Failed to launch Samsung bedtime activity", e);
         }
     }
 

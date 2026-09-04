@@ -23,9 +23,9 @@
     <string name="secure_settings_permission_not_allowed">Secure Settings access denied</string>
 
     <!-- Permission Preferences -->
-    <string name="acc_permission_title">Accessibility Service</string>
-    <string name="acc_permission_allowed">connected</string>
-    <string name="acc_permission_not_allowed">not connected</string>
+    <string name="system_alert_window_permission_title">System Alert Window Permission</string>
+    <string name="system_alert_window_permission_allowed">System Alert Window access granted</string>
+    <string name="system_alert_window_permission_not_allowed">System Alert Window access denied</string>
 
     <!-- Sync Preferences -->
     <string name="sync_title">Sync DND</string>

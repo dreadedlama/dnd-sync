@@ -5,6 +5,7 @@ import android.app.NotificationManager;
 import android.content.Context;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
+import android.provider.Settings;
 import android.widget.Toast;
 import androidx.core.content.ContextCompat;
 import androidx.preference.Preference;
@@ -16,6 +17,7 @@ public class MainFragment extends PreferenceFragmentCompat {
     private Preference dndPref;
     private Preference bedtimePref;
     private Preference secureSettingsPref;
+    private Preference systemAlertWindowPref;
     private Preference powerSaverMode;
 
 
@@ -26,6 +28,7 @@ public class MainFragment extends PreferenceFragmentCompat {
 
         dndPref = findPreference("dnd_permission_key");
         bedtimePref = findPreference("bedtime_key");
+        systemAlertWindowPref = findPreference("system_alert_window_permission_key");
         secureSettingsPref = findPreference("secure_settings_permission_key");
         powerSaverMode = findPreference("power_saver_key");
 
@@ -43,12 +46,20 @@ public class MainFragment extends PreferenceFragmentCompat {
             return true;
         });
 
+        systemAlertWindowPref.setOnPreferenceClickListener(preference -> {
+            if (!checkSystemAlertWindowPermission(getContext())) {
+                Toast.makeText(getContext(), "Follow the instructions to grant the permission via ADB!", Toast.LENGTH_SHORT).show();
+            }
+            return true;
+        });
+
         checkDNDPermission();
         checkSecureSettingsPermission(getContext());
+        checkSystemAlertWindowPermission(getContext());
     }
 
     private boolean checkDNDPermission() {
-        NotificationManager mNotificationManager = (NotificationManager) Objects.requireNonNull(getContext()).getSystemService(Context.NOTIFICATION_SERVICE);
+        NotificationManager mNotificationManager = (NotificationManager) requireContext().getSystemService(Context.NOTIFICATION_SERVICE);
         boolean allowed = mNotificationManager.isNotificationPolicyAccessGranted();
         if (allowed) {
             dndPref.setSummary(R.string.granted);
@@ -59,13 +70,23 @@ public class MainFragment extends PreferenceFragmentCompat {
     }
 
     private boolean checkSecureSettingsPermission(Context context) {
-        boolean allowed;
-        allowed = ContextCompat.checkSelfPermission(context, Manifest.permission.WRITE_SECURE_SETTINGS) == PackageManager.PERMISSION_GRANTED;
+        boolean allowed = ContextCompat.checkSelfPermission(context, Manifest.permission.WRITE_SECURE_SETTINGS) == PackageManager.PERMISSION_GRANTED;
         if (allowed) {
             secureSettingsPref.setSummary(R.string.granted);
         } else {
             secureSettingsPref.setSummary(R.string.denied);
         }
+        return allowed;
+    }
+
+    private boolean checkSystemAlertWindowPermission(Context context) {
+        boolean allowed = Settings.canDrawOverlays(context);
+        if (allowed) {
+            systemAlertWindowPref.setSummary(R.string.granted);
+        } else {
+            systemAlertWindowPref.setSummary(R.string.denied);
+        }
+
         return allowed;
     }
 }

@@ -63,6 +63,12 @@
                 app:summary="summary"
                 app:title="@string/secure_settings_permission_title" />
 
+        <Preference
+                app:iconSpaceReserved="false"
+                app:key="system_alert_window_permission_key"
+                app:summary="summary"
+                app:title="@string/system_alert_window_permission_title" />
+
     </PreferenceCategory>
 
 </PreferenceScreen>

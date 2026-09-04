@@ -22,11 +22,6 @@
     <string name="secure_settings_permission_allowed">Secure Settings access granted</string>
     <string name="secure_settings_permission_not_allowed">Secure Settings access denied</string>
 
-    <!-- Permission Preferences -->
-    <string name="acc_permission_title">Accessibility Service</string>
-    <string name="acc_permission_allowed">connected</string>
-    <string name="acc_permission_not_allowed">not connected</string>
-
     <!-- Sync Preferences -->
     <string name="sync_title">Sync DND</string>
     <string name="sync_summary_off">Sync DND state to phone</string>
