@@ -1,93 +1,142 @@
 package in.dreadedlama.dndsync;
 
-
+import android.app.NotificationManager;
 import android.content.SharedPreferences;
 import android.service.notification.NotificationListenerService;
 import android.service.notification.StatusBarNotification;
 import android.util.Log;
+
 import androidx.preference.PreferenceManager;
+
 import com.google.android.gms.wearable.PutDataRequest;
 import com.google.android.gms.wearable.Wearable;
+
 import in.dreadedlama.dndsync.shared.PhoneSignal;
 
 public class DNDNotificationService extends NotificationListenerService {
+
     private static final String TAG = "DNDNotificationService";
+
     private static final String DND_SYNC_MESSAGE_PATH = "/wear-dnd-sync";
 
     @Override
-    public void onNotificationPosted(StatusBarNotification sbn){
-        if(isDigitalWellBeingWindDownNotification(sbn)) {
+    public void onNotificationPosted(StatusBarNotification sbn) {
+
+        if (isDigitalWellBeingWindDownNotification(sbn)) {
             onNotificationAddedCallDNDSync(sbn);
         }
-
     }
 
     @Override
-    public void onNotificationRemoved(StatusBarNotification sbn){
-        // if notifications is removed, disable bedtime mode
-        if(isDigitalWellBeingWindDownNotification(sbn)) {
+    public void onNotificationRemoved(StatusBarNotification sbn) {
+
+        if (isDigitalWellBeingWindDownNotification(sbn)) {
+
             SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
+
             boolean syncBedTime = prefs.getBoolean("bedtime_sync_key", true);
 
-            if (syncBedTime) {
-                // 6 means bedtime OFF
-                Log.d(TAG, "bedtime mode is off");
-                int interruptionFilter = 6;
-                new Thread(() -> sendDNDSync(new PhoneSignal(interruptionFilter, prefs))).start();
+            if (!syncBedTime) {
+                return;
             }
+
+            Log.d(TAG, "Bedtime mode is OFF");
+
+            int dndState = getNotificationManager().getCurrentInterruptionFilter();
+
+            PhoneSignal signal = new PhoneSignal(dndState, 0, prefs);
+
+            new Thread(() -> sendDNDSync(signal)).start();
         }
     }
 
     private boolean isDigitalWellBeingWindDownNotification(StatusBarNotification sbn) {
-        return sbn.getPackageName().equals("com.google.android.apps.wellbeing") &&
-                sbn.getNotification().getChannelId().equals("wind_down_notifications");
+
+        return sbn.getPackageName().equals("com.google.android.apps.wellbeing")
+                && sbn.getNotification().getChannelId().equals("wind_down_notifications");
     }
 
     private void onNotificationAddedCallDNDSync(StatusBarNotification sbn) {
 
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
+
         boolean syncBedTime = prefs.getBoolean("bedtime_sync_key", true);
-        if(syncBedTime) {
 
-            // depending on the number of actions in digital wellbeing notification
-            // bedtime mode could be in "pause mode" or "on mode":
-            // * If it is in "pause" mode, there is only one action ("Restart bedtime")
-            // * If it is in "on" mode, there are two actions possible ("Pause it" and "De-activate it")
-            boolean bedTimeModeIsOn = sbn.getNotification().actions.length == 2;
-            boolean bedTimeModeIsPaused = sbn.getNotification().actions.length == 1;
+        if (!syncBedTime) {
+            return;
+        }
 
-            if (bedTimeModeIsOn) {
-                // 5 means bedtime ON
-                Log.d(TAG, "bedtime mode is on");
-                int interruptionFilter = 5;
-                new Thread(() -> sendDNDSync(new PhoneSignal(interruptionFilter,prefs))).start();
-            } else if (bedTimeModeIsPaused) {
-                // 6 means bedtime OFF
-                Log.d(TAG, "bedtime mode is off");
-                int interruptionFilter = 6;
-                new Thread(() -> sendDNDSync(new PhoneSignal(interruptionFilter,prefs))).start();
-            }
+        if (sbn.getNotification().actions == null) {
+            return;
+        }
+
+        boolean bedTimeModeIsOn = sbn.getNotification().actions.length == 2;
+        boolean bedTimeModeIsPaused = sbn.getNotification().actions.length == 1;
+
+        int dndState = getNotificationManager().getCurrentInterruptionFilter();
+
+        if (bedTimeModeIsOn) {
+
+            Log.d(TAG, "Bedtime mode is ON");
+
+            PhoneSignal signal = new PhoneSignal(dndState, 1, prefs);
+
+            new Thread(() -> sendDNDSync(signal)).start();
+
+        } else if (bedTimeModeIsPaused) {
+
+            Log.d(TAG, "Bedtime mode is OFF");
+
+            PhoneSignal signal = new PhoneSignal(dndState, 0, prefs);
+
+            new Thread(() -> sendDNDSync(signal)).start();
         }
     }
 
     @Override
-    public void onInterruptionFilterChanged (int interruptionFilter) {
-        Log.d(TAG, "interruption filter changed to " + interruptionFilter);
+    public void onInterruptionFilterChanged(int interruptionFilter) {
+
+        Log.d(TAG, "Interruption filter changed to " + interruptionFilter);
 
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
+
         boolean syncDnd = prefs.getBoolean("dnd_sync_key", true);
-        if(syncDnd) {
-            new Thread(() -> sendDNDSync(new PhoneSignal(interruptionFilter,prefs))).start();
+
+        if (!syncDnd) {
+            return;
         }
+
+        /*
+         * Normal DND change.
+         *
+         * Byte 0 = DND
+         * Byte 1 = 2 (NO CHANGE to Bedtime)
+         */
+        PhoneSignal signal = new PhoneSignal(interruptionFilter, 2, prefs);
+
+        new Thread(() -> sendDNDSync(signal)).start();
     }
 
     private void sendDNDSync(PhoneSignal phoneSignal) {
-        int dndState = phoneSignal.dndState;
-        Wearable.getDataClient(this)
-                .putDataItem(PutDataRequest.create(DND_SYNC_MESSAGE_PATH)
-                        .setData(new byte[]{(byte) dndState, 0})
-                        // mark urgent, otherwise it could take up to 30 minutes to sync
+
+        if (phoneSignal.dndState == null || phoneSignal.bedtimeState == null) {
+            Log.d(TAG, "Invalid PhoneSignal");
+            return;
+        }
+
+        byte dndState = (byte) phoneSignal.dndState.intValue();
+        byte bedtimeState = (byte) phoneSignal.bedtimeState.intValue();
+
+        Log.d(TAG, "Sending to watch: DND=" + dndState + ", Bedtime=" + bedtimeState);
+
+        Wearable.getDataClient(this).putDataItem(
+                PutDataRequest.create(DND_SYNC_MESSAGE_PATH)
+                        .setData(new byte[]{dndState, bedtimeState})
                         .setUrgent()
-                );
+        );
+    }
+
+    private NotificationManager getNotificationManager() {
+        return (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
     }
 }

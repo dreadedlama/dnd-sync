@@ -11,53 +11,100 @@ import com.google.android.gms.wearable.DataEventBuffer;
 import com.google.android.gms.wearable.WearableListenerService;
 
 public class DNDSyncListenerService extends WearableListenerService {
+
     private static final String TAG = "DNDSyncListenerService";
 
     @Override
     public void onDataChanged(@NonNull DataEventBuffer dataEventBuffer) {
+
         Log.d(TAG, "onDataChanged: " + dataEventBuffer);
 
         for (DataEvent dataEvent : dataEventBuffer) {
 
-            // No need to filter by path, it is defined in the manifest
-            // Android will make sure we only get our own messages
-
             byte[] data = dataEvent.getDataItem().getData();
-            // data[0] contains dnd mode of phone
-            // 0 = INTERRUPTION_FILTER_UNKNOWN
-            // 1 = INTERRUPTION_FILTER_ALL (all notifications pass)
-            // 2 = INTERRUPTION_FILTER_PRIORITY
-            // 3 = INTERRUPTION_FILTER_NONE (no notification passes)
-            // 4 = INTERRUPTION_FILTER_ALARMS
-            byte dndStatePhone = data[0];
-            Log.d(TAG, "dndStatePhone: " + dndStatePhone);
 
-            if(dndStatePhone == 5 || dndStatePhone == 6){
-                // our own dnd message, just ignore
+            if (data.length < 2) {
+                Log.d(TAG, "Invalid sync data. Expected 2 bytes, got " + data.length);
                 continue;
             }
 
-            // get dnd state
-            NotificationManager mNotificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+            /*
+             * Byte 0 = DND
+             *
+             * 0 = UNKNOWN
+             * 1 = ALL
+             * 2 = PRIORITY
+             * 3 = NONE
+             * 4 = ALARMS
+             */
+            byte dndStateWatch = data[0];
 
-            int filterState = mNotificationManager.getCurrentInterruptionFilter();
-            if (filterState < 0 || filterState > 4) {
-                Log.d(TAG, "DNDSync weird current dnd state: " + filterState);
+            /*
+             * Byte 1 = Bedtime
+             *
+             * 0 = OFF
+             * 1 = ON
+             * 2 = NO CHANGE
+             */
+            byte bedtimeStateWatch = data[1];
+
+            Log.d(TAG, "Received from watch: DND=" + dndStateWatch + ", Bedtime=" + bedtimeStateWatch);
+
+            if (dndStateWatch < 0 || dndStateWatch > 4) {
+                Log.d(TAG, "Invalid DND state: " + dndStateWatch);
+                continue;
             }
-            byte currentDndState = (byte) filterState;
-            Log.d(TAG, "currentDndState: " + currentDndState);
 
-            if (dndStatePhone != currentDndState) {
-                Log.d(TAG, "dndStatePhone != currentDndState: " + dndStatePhone + " != " + currentDndState);
-                if (mNotificationManager.isNotificationPolicyAccessGranted()) {
-                    mNotificationManager.setInterruptionFilter(dndStatePhone);
-                    Log.d(TAG, "DND set to " + dndStatePhone);
+            if (bedtimeStateWatch < 0 || bedtimeStateWatch > 2) {
+                Log.d(TAG, "Invalid Bedtime state: " + bedtimeStateWatch);
+                continue;
+            }
+
+            /*
+             * Apply DND received from watch
+             * to the PHONE.
+             */
+            NotificationManager notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+
+            int currentDndState = notificationManager.getCurrentInterruptionFilter();
+
+            if (dndStateWatch != currentDndState) {
+
+                Log.d(TAG, "Changing phone DND from " + currentDndState + " to " + dndStateWatch);
+
+                if (notificationManager.isNotificationPolicyAccessGranted()) {
+
+                    notificationManager.setInterruptionFilter(dndStateWatch);
+
+                    Log.d(TAG, "DND set to " + dndStateWatch);
+
                 } else {
-                    Log.d(TAG, "attempting to set DND but access not granted");
+                    Log.d(TAG, "DND access not granted");
                 }
             }
 
+            /*
+             * Bedtime from watch.
+             *
+             * 2 means:
+             * don't change phone Bedtime.
+             */
+            if (bedtimeStateWatch == 1) {
+
+                Log.d(TAG, "Watch Bedtime = ON");
+
+                // Handle phone Bedtime ON if required.
+
+            } else if (bedtimeStateWatch == 0) {
+
+                Log.d(TAG, "Watch Bedtime = OFF");
+
+                // Handle phone Bedtime OFF if required.
+
+            } else {
+
+                Log.d(TAG, "Watch Bedtime = NO CHANGE");
+            }
         }
     }
-
 }
