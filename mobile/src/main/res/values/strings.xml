@@ -1,20 +1,34 @@
 <resources>
-    <string name="app_name" translatable="false">DNDSync</string>
+    <string name="app_name">DNDSync</string>
+
     <!-- Preference Titles -->
-    <string name="permission_header" translatable="false">Permissions</string>
-    <string name="sync_header" translatable="false">Sync</string>
+    <string name="permission_header">Permissions</string>
+    <string name="phone_sync_header">Sync - Phone preferences</string>
+    <string name="watch_sync_header">Sync - Watch preferences</string>
+
+    <!-- Phone Preferences -->
+    <string name="sync_dnd_title">Sync DND state to watch</string>
+    <string name="sync_dnd_desc">If enabled, a DND change on the phone will lead to a DND change on the watch</string>
+
+    <string name="sync_bedtime_title">Sync Bedtime mode to watch</string>
+    <string name="sync_bedtime_desc">Enable Bedtime mode on the watch whenever it is enabled on the phone</string>
+
+    <string name="sync_dnd_as_bedtime_title">Enable Bedtime mode on DND sync</string>
+    <string name="sync_dnd_as_bedtime_desc">If enabled, DND changes on the phone will enable/disable Bedtime mode on the watch</string>
+
+    <string name="enable_power_saving_title">Enable Power Save mode with Bedtime</string>
+    <string name="enable_power_saving_desc">Bedtime mode will also enable power save mode on the watch</string>
+
+    <!-- Watch Preferences -->
+    <string name="watch_sync_dnd_title">Sync DND state to phone</string>
+    <string name="watch_sync_dnd_desc">If enabled, a DND change on the watch will lead to a DND change on the phone</string>
+
+    <string name="watch_vibrate_title">Vibrate on sync</string>
+    <string name="watch_vibrate_desc">If enabled, 1 small vibration for DND sync, 2 small vibrations for DND and Bedtime sync</string>
 
     <!-- Permission Preferences -->
-    <string name="dnd_permission_title" translatable="false">DND Permission</string>
-    <string name="dnd_permission_allowed" translatable="false">DND access granted</string>
-    <string name="dnd_permission_not_allowed" translatable="false">DND access denied</string>
+    <string name="dnd_permission_title">DND-Bedtime Permission</string>
+    <string name="dnd_permission_allowed">DND-Bedtime access granted</string>
+    <string name="dnd_permission_not_allowed">DND-Bedtime access denied</string>
 
-    <!-- Sync Preferences -->
-    <string name="sync_title" translatable="false">Sync DND state to watch</string>
-    <string name="sync_bedtime_title" translatable="false">Sync Bedtime mode to watch</string>
-    <string name="silent_as_dnd_title" translatable="false">Nothing Phone Flip to Glyph as DND</string>
-
-    <!-- BedTime strings -->
-    <string name="digital_wellbeing_bedtime_on">on</string>
-    <string name="digital_wellbeing_bedtime_paused">paused</string>
 </resources>

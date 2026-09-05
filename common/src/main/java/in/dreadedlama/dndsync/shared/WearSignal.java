@@ -4,26 +4,21 @@ import java.io.Serializable;
 
 public class WearSignal implements Serializable {
 
-    // 0 = UNKNOWN
-    // 1 = ALL
-    // 2 = PRIORITY
-    // 3 = NONE
-    // 4 = ALARMS
     public Integer dndState = null;
 
-    // 0 = Bedtime OFF
-    // 1 = Bedtime ON
-    // 2 = NO CHANGE
-    public Integer bedtimeState = 2;
+    public WearSignal(Integer dndState) {
 
-    public WearSignal(Integer dndState, Integer bedtimeState) {
+        // DnD disabled:
+        // 0 = INTERRUPTION_FILTER_UNKNOWN
+        // 1 = INTERRUPTION_FILTER_ALL
 
-        if (dndState != null && dndState >= 0 && dndState <= 4) {
+        // DnD enabled:
+        // 2 = INTERRUPTION_FILTER_PRIORITY
+        // 3 = INTERRUPTION_FILTER_NONE (no notification passes)
+        // 4 = INTERRUPTION_FILTER_ALARMS
+        if (0 <= dndState && dndState <= 4) {
+
             this.dndState = dndState;
-        }
-
-        if (bedtimeState != null && bedtimeState >= 0 && bedtimeState <= 2) {
-            this.bedtimeState = bedtimeState;
         }
     }
 }

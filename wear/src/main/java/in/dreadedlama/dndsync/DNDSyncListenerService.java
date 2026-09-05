@@ -4,168 +4,182 @@ import android.app.NotificationManager;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.VibrationEffect;
 import android.os.Vibrator;
 import android.provider.Settings;
 import android.util.Log;
-
 import androidx.annotation.NonNull;
-import androidx.preference.PreferenceManager;
-
-import com.google.android.gms.wearable.DataEvent;
-import com.google.android.gms.wearable.DataEventBuffer;
+import com.google.android.gms.wearable.MessageEvent;
 import com.google.android.gms.wearable.WearableListenerService;
 
+import org.apache.commons.lang3.SerializationUtils;
+
+import in.dreadedlama.dndsync.shared.PhoneSignal;
+
 public class DNDSyncListenerService extends WearableListenerService {
-
     private static final String TAG = "DNDSyncListenerService";
-
-    public static final String SAMSUNG = "Samsung";
+    private static final String DND_SYNC_MESSAGE_PATH = "/wear-dnd-sync";
+    private static final String SAMSUNG = "Samsung";
+    public static final String GOOGLE = "Google";
     private final Handler handler = new Handler(Looper.getMainLooper());
     private final Runnable samsungBedtimeLauncher = this::launchSamsungBedtimeUIWithRetry;
 
+
     @Override
-    public void onDataChanged(@NonNull DataEventBuffer dataEventBuffer) {
+    public void onMessageReceived (@NonNull MessageEvent messageEvent) {
 
-        Log.d(TAG, "onDataChanged: " + dataEventBuffer);
-        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
-        for (DataEvent dataEvent : dataEventBuffer) {
-            byte[] data = dataEvent.getDataItem().getData();
-            if (data.length < 2) {
-                Log.d(TAG, "Invalid sync data. Expected 2 bytes, got " + data.length);
-                continue;
-            }
-            /*
-             * Byte 0 = DND
-             */
-            byte dndStatePhone = data[0];
+        if (messageEvent.getPath().equalsIgnoreCase(DND_SYNC_MESSAGE_PATH)) {
 
-            /*
-             * Byte 1 = Bedtime
-             *
-             * 0 = OFF
-             * 1 = ON
-             * 2 = NO CHANGE
-             */
-            byte bedtimeStatePhone = data[1];
+            Log.d(TAG, "received path: " + DND_SYNC_MESSAGE_PATH);
 
-            Log.d(TAG, "Received from phone: DND=" + dndStatePhone + ", Bedtime=" + bedtimeStatePhone);
+            // data is now a PhoneSignal object, it must be deserialized
+            byte[] data = messageEvent.getData();
+            PhoneSignal phoneSignal = SerializationUtils.deserialize(data);
 
-            if (dndStatePhone < 0 || dndStatePhone > 4) {
-                Log.d(TAG, "Invalid DND state: " + dndStatePhone);
-                continue;
+            Log.d(TAG, "dndStatePhone: " + phoneSignal.dndState);
+
+            // get dnd state
+            NotificationManager mNotificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+            int currentDndState = mNotificationManager.getCurrentInterruptionFilter();
+
+            Log.d(TAG, "currentDndState: " + currentDndState);
+            if (currentDndState < 0 || currentDndState > 4) {
+                Log.d(TAG, "Current DND state it's weird, should be in range [0,4]");
             }
 
-            if (bedtimeStatePhone < 0 || bedtimeStatePhone > 2) {
-                Log.d(TAG, "Invalid Bedtime state: " + bedtimeStatePhone);
-                continue;
+            if (phoneSignal.dndState != null && phoneSignal.dndState == currentDndState) {
+                // avoid issue that happens due to redundant signal propagation:
+                // if dnd_as_bedtime and watch_sync_dnd are activated, when dnd is activated
+                // from the watch, dnd is activated to the phone and then bedtime is activated
+                // back on the watch. This early return avoids that.
+                return;
+            } else if (phoneSignal.dndState != null) {
+
+                Log.d(TAG, "dndStatePhone != currentDndState: " + phoneSignal.dndState + " != " + currentDndState);
+
+                changeDndSetting(mNotificationManager, phoneSignal.dndState);
+
+                Log.d(TAG, "vibrate: " + phoneSignal.vibratePref);
+                if (phoneSignal.vibratePref) {
+                    vibrate();
+                }
+
             }
 
-            boolean vibrate = prefs.getBoolean("vibrate_key", false);
+            String settingBedtimeStr = "setting_bedtime_mode_running_state";
+            int currentBedtimeState = Settings.Global.getInt(
+                    getApplicationContext().getContentResolver(), settingBedtimeStr, -1);
 
-            if (vibrate) {
-                vibrate();
-            }
-
-            /*
-             * -------------------------
-             * BEDTIME
-             * -------------------------
-             */
-
-            if (bedtimeStatePhone == 1) {
-                Log.d(TAG, "Phone Bedtime = ON");
-                setBedtimeState(1, prefs);
-
-            } else if (bedtimeStatePhone == 0) {
-                Log.d(TAG, "Phone Bedtime = OFF");
-                setBedtimeState(0, prefs);
-
+            if (currentBedtimeState != -1) {
+                Log.d(TAG, "watch is the galaxy watch");
             } else {
-                Log.d(TAG, "Phone Bedtime = NO CHANGE");
+                Log.d(TAG, "watch is not the galaxy watch");
+
+                settingBedtimeStr = "bedtime_mode";
+                currentBedtimeState = Settings.Global.getInt(
+                        getApplicationContext().getContentResolver(), settingBedtimeStr, -1);
             }
 
-            /*
-             * -------------------------
-             * DND
-             * -------------------------
-             */
+            Log.d(TAG, "currentBedtimeState: " + currentBedtimeState);
 
-            NotificationManager notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+            if (phoneSignal.bedtimeState != null && phoneSignal.bedtimeState != currentBedtimeState) {
 
-            int currentDndState = notificationManager.getCurrentInterruptionFilter();
-            byte currentDndStateByte = (byte) currentDndState;
+                Log.d(TAG, "bedtimeStatePhone != currentBedtimeState: " + phoneSignal.bedtimeState + " != " + currentBedtimeState);
 
-            if (dndStatePhone != currentDndStateByte) {
+                // activating/disabling bedtime also activates/disables dnd, just like
+                // when activating bedtime manually from the watch.
+                // dndState = 2 means it's activated, dndState = 1 means it's disabled
+                int dndState = phoneSignal.bedtimeState == 1 ? 2 : 1;
+                changeDndSetting(mNotificationManager, dndState);
 
-                Log.d(TAG, "Changing watch DND from " + currentDndState + " to " + dndStatePhone);
-
-                if (notificationManager.isNotificationPolicyAccessGranted()) {
-
-                    notificationManager.setInterruptionFilter(dndStatePhone);
-
-                    Log.d(TAG, "DND set to " + dndStatePhone);
-
+                boolean bedtimeModeSuccess = changeBedtimeSetting(settingBedtimeStr, phoneSignal.bedtimeState);
+                if (bedtimeModeSuccess) {
+                    Log.d(TAG, "Bedtime mode value toggled");
                 } else {
-                    Log.d(TAG, "DND access not granted");
+                    Log.d(TAG, "Bedtime mode toggle failed");
+                }
+
+                if(phoneSignal.powersavePref) {
+
+                    boolean powerModeSuccess = changePowerModeSetting(phoneSignal.bedtimeState);
+                    if(powerModeSuccess) {
+                        Log.d(TAG, "Power Saver mode toggled");
+                    } else {
+                        Log.d(TAG, "Power Saver mode toggle failed");
+                    }
+                }
+
+                Log.d(TAG, "vibrate: " + phoneSignal.vibratePref);
+                if (phoneSignal.vibratePref) {
+                    vibrate();
                 }
             }
+
+        } else {
+            super.onMessageReceived(messageEvent);
         }
     }
 
-    private void setBedtimeState(int bedTimeModeValue, SharedPreferences prefs) {
+    private void changeDndSetting(NotificationManager mNotificationManager, int newSetting) {
 
-        boolean useBedtimeMode = prefs.getBoolean("bedtime_key", true);
-
-        if (!useBedtimeMode) {
-            return;
+        if (mNotificationManager.isNotificationPolicyAccessGranted()) {
+            mNotificationManager.setInterruptionFilter(newSetting);
+            Log.d(TAG, "DND set to " + newSetting);
+        } else {
+            Log.d(TAG, "attempting to set DND but access not granted");
         }
 
-        boolean usePowerSaverMode = prefs.getBoolean("power_saver_key", true);
+    }
 
-        if (usePowerSaverMode) {
-            setPowerSaveMode(bedTimeModeValue);
-        }
+    private boolean changeBedtimeSetting(String settingBedtimeStr, int newSetting) {
 
         String manufacturer = android.os.Build.MANUFACTURER;
-
         boolean isSamsung = manufacturer.equalsIgnoreCase(SAMSUNG);
+        boolean isGoogle = manufacturer.equalsIgnoreCase(GOOGLE);
+        boolean googleBedtimeModeSuccess = true;
 
-        boolean bedtimeModeSuccess = true;
-        boolean zenModeSuccess = false;
-        boolean samsungSuccess = true;
 
-        if (isSamsung) {
-            // Samsung Watch
-            zenModeSuccess = Settings.Global.putInt(getContentResolver(), "zen_mode", bedTimeModeValue);
-            samsungSuccess = Settings.Global.putInt(getContentResolver(), "setting_bedtime_mode_running_state", bedTimeModeValue);
-
-        } else {
-            // Pixel / Google Watch
-            bedtimeModeSuccess = Settings.Global.putInt(getContentResolver(), "bedtime_mode", bedTimeModeValue);
-            zenModeSuccess = Settings.Global.putInt(getContentResolver(), "zen_mode", bedTimeModeValue);
+        boolean bedtimeModeSuccess = Settings.Global.putInt(
+                getApplicationContext().getContentResolver(), settingBedtimeStr, newSetting);
+        boolean zenModeSuccess = Settings.Global.putInt(
+                getApplicationContext().getContentResolver(), "zen_mode", newSetting);
+        if(isGoogle) {
+            googleBedtimeModeSuccess = Settings.Global.putInt(getContentResolver(), "bedtime_mode", newSetting);
         }
 
-        if (bedtimeModeSuccess && zenModeSuccess && samsungSuccess) {
-
-            Log.d(TAG, "Bedtime values written: " + bedTimeModeValue);
-
-            /*
-             * ONLY launch Samsung UI when
-             * turning Bedtime ON.
-             * Never launch it for OFF.
-             */
-            if (isSamsung && bedTimeModeValue == 1) {
-                handler.removeCallbacks(samsungBedtimeLauncher);
-                handler.postDelayed(samsungBedtimeLauncher, 1500);
-            }
-
-        } else {
-            Log.d(TAG, "Bedtime mode toggle failed");
+        if(isSamsung) {
+            handler.removeCallbacks(samsungBedtimeLauncher);
+            handler.postDelayed(samsungBedtimeLauncher, 1500);
         }
+
+        return bedtimeModeSuccess && zenModeSuccess && googleBedtimeModeSuccess;
+    }
+
+    private boolean changePowerModeSetting(int newSetting) {
+
+        boolean lowPower = Settings.Global.putInt(
+                getApplicationContext().getContentResolver(), "low_power", newSetting);
+        boolean restrictedDevicePerformance = Settings.Global.putInt(
+                getApplicationContext().getContentResolver(), "restricted_device_performance", newSetting);
+
+        boolean lowPowerBackDataOff = Settings.Global.putInt(
+                getApplicationContext().getContentResolver(), "low_power_back_data_off", newSetting);
+        boolean smConnectivityDisable = Settings.Secure.putInt(
+                getApplicationContext().getContentResolver(), "sm_connectivity_disable", newSetting);
+
+        // screen timeout should be set to 10000 also, and ambient_tilt_to_wake should be set to 0
+        // but previous variable states in those 2 cases must be stored and they do not seem to stick
+        // and they are not so much important tbh (ambient tilt to wake is disabled anyways)
+
+        return lowPower && restrictedDevicePerformance
+                && lowPowerBackDataOff && smConnectivityDisable;
+    }
+
+    private void vibrate() {
+        Vibrator v = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
+        v.vibrate(VibrationEffect.createOneShot(20, VibrationEffect.DEFAULT_AMPLITUDE));
     }
 
     private void launchSamsungBedtimeUIWithRetry() {
@@ -173,8 +187,7 @@ public class DNDSyncListenerService extends WearableListenerService {
         Intent intent = new Intent();
         intent.setComponent(new ComponentName(
                 "com.google.android.apps.wearable.settings",
-                "com.samsung.android.clockwork.settings.advanced.bedtimemode.StBedtimeModeReservedActivity"
-        ));
+                "com.samsung.android.clockwork.settings.advanced.bedtimemode.StBedtimeModeReservedActivity"));
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
 
         try {
@@ -186,26 +199,4 @@ public class DNDSyncListenerService extends WearableListenerService {
         }
     }
 
-    private void setPowerSaveMode(int value) {
-
-        boolean lowPower = Settings.Global.putInt(getContentResolver(), "low_power", value);
-        boolean perfRestricted = Settings.Global.putInt(getContentResolver(), "restricted_device_performance", value);
-        boolean backDataOff = Settings.Global.putInt(getContentResolver(), "low_power_back_data_off", value);
-        boolean smConnectivity = Settings.Secure.putInt(getContentResolver(), "sm_connectivity_disable", value);
-
-        if (lowPower && perfRestricted && backDataOff && smConnectivity) {
-            Log.d(TAG, "Power Saver mode toggled");
-
-        } else {
-            Log.d(TAG, "Power Saver mode toggle failed");
-        }
-    }
-
-    private void vibrate() {
-
-        Vibrator v = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
-        if (v != null) {
-            v.vibrate(VibrationEffect.createOneShot(20, VibrationEffect.DEFAULT_AMPLITUDE));
-        }
-    }
 }

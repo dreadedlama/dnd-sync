@@ -3,52 +3,6 @@
 
     <PreferenceCategory
         app:iconSpaceReserved="false"
-        app:title="@string/sync_header">
-
-        <SwitchPreferenceCompat
-            app:defaultValue="true"
-            app:iconSpaceReserved="false"
-            app:key="dnd_sync_key"
-            app:title="Sync DND"
-            app:summaryOn="@string/sync_summary_on"
-            app:summaryOff="@string/sync_summary_off"
-            />
-
-        <SwitchPreferenceCompat
-            app:iconSpaceReserved="false"
-            app:key="bedtime_key"
-            app:defaultValue="false"
-            app:summaryOn="@string/bedtime_summary_on"
-            app:summaryOff="@string/bedtime_summary_off"
-            app:title="@string/bedtime_title" />
-
-        <SwitchPreferenceCompat
-                app:iconSpaceReserved="false"
-                app:key="power_saver_key"
-                app:defaultValue="false"
-                app:summaryOn="@string/power_saver_summary_on"
-                app:summaryOff="@string/power_saver_summary_off"
-                app:title="@string/power_saver_title" />
-
-    </PreferenceCategory>
-
-    <PreferenceCategory
-        app:iconSpaceReserved="false"
-        app:title="@string/other_header">
-
-        <SwitchPreferenceCompat
-            app:defaultValue="false"
-            app:iconSpaceReserved="false"
-            app:key="vibrate_key"
-            app:title="@string/vibrate_title"
-            app:summaryOn="@string/vibrate_summary_on"
-            app:summaryOff="@string/vibrate_summary_off"
-            />
-
-    </PreferenceCategory>
-
-    <PreferenceCategory
-        app:iconSpaceReserved="false"
         app:title="@string/permission_header">
 
         <Preference

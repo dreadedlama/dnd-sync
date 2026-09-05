@@ -19,3 +19,5 @@
 .externalNativeBuild
 .cxx
 local.properties
+/wear/release/
+/mobile/release/

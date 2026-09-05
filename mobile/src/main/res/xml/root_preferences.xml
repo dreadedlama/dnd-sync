@@ -1,42 +1,67 @@
 <PreferenceScreen xmlns:app="http://schemas.android.com/apk/res-auto"
-                  app:iconSpaceReserved="false">
+    app:iconSpaceReserved="false">
 
-    <!-- First Group: DND Sync + Treat Silent as DND -->
-    <PreferenceCategory
-            app:title="DND Sync Settings"
-            app:iconSpaceReserved="false">
+    <PreferenceCategory app:title="@string/phone_sync_header"
+        app:iconSpaceReserved="false">
 
-        <!-- Parent Switch -->
         <SwitchPreferenceCompat
-                app:key="dnd_sync_key"
-                app:iconSpaceReserved="false"
-                app:defaultValue="true"
-                app:title="@string/sync_title" />
+            app:key="dnd_sync_key"
+            app:iconSpaceReserved="false"
+            app:defaultValue="true"
+            app:title="@string/sync_dnd_title"
+            app:summary="@string/sync_dnd_desc" />
+
+        <SwitchPreferenceCompat
+            app:dependency="dnd_sync_key"
+            app:key="dnd_as_bedtime_key"
+            app:title="@string/sync_dnd_as_bedtime_title"
+            app:summary="@string/sync_dnd_as_bedtime_desc"
+            app:defaultValue="false" />
+
+        <SwitchPreferenceCompat
+            app:key="bedtime_sync_key"
+            app:iconSpaceReserved="false"
+            app:defaultValue="false"
+            app:title="@string/sync_bedtime_title"
+            app:summary="@string/sync_bedtime_desc" />
+
+        <SwitchPreferenceCompat
+            app:key="power_save_key"
+            app:iconSpaceReserved="false"
+            app:enabled="false"
+            app:title="@string/enable_power_saving_title"
+            app:summary="@string/enable_power_saving_desc"
+            app:defaultValue="false"/>
 
     </PreferenceCategory>
 
-    <!-- Second Group: Bedtime -->
-    <PreferenceCategory
-            app:title="Bedtime Sync Settings"
-            app:iconSpaceReserved="false">
+    <PreferenceCategory app:title="@string/watch_sync_header"
+        app:iconSpaceReserved="false">
 
         <SwitchPreferenceCompat
-                app:key="bedtime_sync_key"
-                app:iconSpaceReserved="false"
-                app:defaultValue="true"
-                app:title="@string/sync_bedtime_title" />
+            app:key="watch_dnd_sync_key"
+            app:iconSpaceReserved="false"
+            app:defaultValue="true"
+            app:title="@string/watch_sync_dnd_title"
+            app:summary="@string/watch_sync_dnd_desc" />
+
+        <SwitchPreferenceCompat
+            app:key="watch_vibrate_key"
+            app:iconSpaceReserved="false"
+            app:defaultValue="false"
+            app:title="@string/watch_vibrate_title"
+            app:summary="@string/watch_vibrate_desc" />
+
     </PreferenceCategory>
 
-    <!-- Permissions -->
-    <PreferenceCategory
-            app:title="@string/permission_header"
-            app:iconSpaceReserved="false">
+    <PreferenceCategory app:title="@string/permission_header"
+        app:iconSpaceReserved="false">
 
-        <Preference
-                app:key="dnd_permission_key"
-                app:iconSpaceReserved="false"
-                app:title="@string/dnd_permission_title"
-                app:summary="@string/dnd_permission_not_allowed" />
+        <Preference app:key="dnd_permission_key"
+            app:iconSpaceReserved="false"
+            app:title="@string/dnd_permission_title"
+            app:summary="@string/dnd_permission_not_allowed" />
+
     </PreferenceCategory>
 
 </PreferenceScreen>

@@ -11,26 +11,18 @@ import androidx.core.content.ContextCompat;
 import androidx.preference.Preference;
 import androidx.preference.PreferenceFragmentCompat;
 
-import java.util.Objects;
-
 public class MainFragment extends PreferenceFragmentCompat {
     private Preference dndPref;
-    private Preference bedtimePref;
     private Preference secureSettingsPref;
     private Preference systemAlertWindowPref;
-    private Preference powerSaverMode;
-
-
 
     @Override
     public void onCreatePreferences(Bundle savedInstanceState, String rootKey) {
         setPreferencesFromResource(R.xml.root_preferences, rootKey);
 
         dndPref = findPreference("dnd_permission_key");
-        bedtimePref = findPreference("bedtime_key");
-        systemAlertWindowPref = findPreference("system_alert_window_permission_key");
         secureSettingsPref = findPreference("secure_settings_permission_key");
-        powerSaverMode = findPreference("power_saver_key");
+        systemAlertWindowPref = findPreference("system_alert_window_permission_key");
 
         dndPref.setOnPreferenceClickListener(preference -> {
             if (!checkDNDPermission()) {
@@ -59,7 +51,7 @@ public class MainFragment extends PreferenceFragmentCompat {
     }
 
     private boolean checkDNDPermission() {
-        NotificationManager mNotificationManager = (NotificationManager) requireContext().getSystemService(Context.NOTIFICATION_SERVICE);
+        NotificationManager mNotificationManager = (NotificationManager) getContext().getSystemService(Context.NOTIFICATION_SERVICE);
         boolean allowed = mNotificationManager.isNotificationPolicyAccessGranted();
         if (allowed) {
             dndPref.setSummary(R.string.granted);

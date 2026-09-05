@@ -8,7 +8,7 @@ android {
 
     defaultConfig {
         applicationId "in.dreadedlama.dndsync"
-        minSdk 30
+        minSdk 26
         targetSdk 33
         versionCode 4
         versionName "2.5"
@@ -23,8 +23,8 @@ android {
         }
     }
     compileOptions {
-        sourceCompatibility JavaVersion.VERSION_1_8
-        targetCompatibility JavaVersion.VERSION_1_8
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
     }
 }
 
@@ -34,9 +34,11 @@ dependencies {
     implementation 'com.google.android.gms:play-services-wearable:19.0.0'
     implementation 'androidx.constraintlayout:constraintlayout:2.2.1'
     implementation 'androidx.preference:preference:1.2.1'
+    implementation 'org.apache.commons:commons-lang3:3.5'
+    implementation project(path: ':common')
+
     testImplementation 'junit:junit:4.13.2'
     androidTestImplementation 'androidx.test.ext:junit:1.2.1'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.6.1'
-    implementation project(path: ':common')
 
 }

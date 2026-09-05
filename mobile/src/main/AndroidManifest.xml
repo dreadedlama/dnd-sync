@@ -2,10 +2,6 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="in.dreadedlama.dndsync">
 
-    <!-- Permissions -->
-    <!-- Required for DND control -->
-    <uses-permission android:name="android.permission.ACCESS_NOTIFICATION_POLICY" />
-
     <application
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
@@ -35,9 +31,8 @@
             android:name="in.dreadedlama.dndsync.DNDSyncListenerService"
             android:enabled="true"
             android:exported="true">
-
             <intent-filter>
-                <action android:name="com.google.android.gms.wearable.DATA_CHANGED" />
+                <action android:name="com.google.android.gms.wearable.MESSAGE_RECEIVED" />
 
                 <data
                     android:host="*"
@@ -45,16 +40,6 @@
                     android:scheme="wear" />
             </intent-filter>
         </service>
-        <!-- Receiver for Ringer Mode Changes -->
-<!--        <receiver-->
-<!--                android:name="in.dreadedlama.dndsync.RingerModeListenerService"-->
-<!--                android:enabled="true"-->
-<!--                android:exported="false">-->
-<!--            <intent-filter>-->
-<!--                <action android:name="android.media.RINGER_MODE_CHANGED" />-->
-<!--            </intent-filter>-->
-<!--        </receiver>-->
-
     </application>
 
 </manifest>

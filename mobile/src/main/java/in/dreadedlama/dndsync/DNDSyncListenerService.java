@@ -2,109 +2,62 @@ package in.dreadedlama.dndsync;
 
 import android.app.NotificationManager;
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
+import androidx.preference.PreferenceManager;
 
-import com.google.android.gms.wearable.DataEvent;
-import com.google.android.gms.wearable.DataEventBuffer;
+import com.google.android.gms.wearable.MessageEvent;
 import com.google.android.gms.wearable.WearableListenerService;
 
-public class DNDSyncListenerService extends WearableListenerService {
+import org.apache.commons.lang3.SerializationUtils;
 
+import in.dreadedlama.dndsync.shared.WearSignal;
+
+public class DNDSyncListenerService extends WearableListenerService {
     private static final String TAG = "DNDSyncListenerService";
+    private static final String DND_SYNC_MESSAGE_PATH = "/wear-dnd-sync";
 
     @Override
-    public void onDataChanged(@NonNull DataEventBuffer dataEventBuffer) {
+    public void onMessageReceived (@NonNull MessageEvent messageEvent) {
 
-        Log.d(TAG, "onDataChanged: " + dataEventBuffer);
+        if (messageEvent.getPath().equalsIgnoreCase(DND_SYNC_MESSAGE_PATH)) {
 
-        for (DataEvent dataEvent : dataEventBuffer) {
+            Log.d(TAG, "received path: " + DND_SYNC_MESSAGE_PATH);
 
-            byte[] data = dataEvent.getDataItem().getData();
+            SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
 
-            if (data.length < 2) {
-                Log.d(TAG, "Invalid sync data. Expected 2 bytes, got " + data.length);
-                continue;
+            byte[] data = messageEvent.getData();
+            WearSignal wearSignal = SerializationUtils.deserialize(data);
+            int dndStateWear = wearSignal.dndState;
+
+            Log.d(TAG, "dndStateWear: " + dndStateWear);
+
+            // get dnd state
+            NotificationManager mNotificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+            int currentDndState = mNotificationManager.getCurrentInterruptionFilter();
+
+            Log.d(TAG, "currentDndState: " + currentDndState);
+            if (currentDndState < 0 || currentDndState > 4) {
+                Log.d(TAG, "Current DND state it's weird, should be in range [0,4]");
             }
 
-            /*
-             * Byte 0 = DND
-             *
-             * 0 = UNKNOWN
-             * 1 = ALL
-             * 2 = PRIORITY
-             * 3 = NONE
-             * 4 = ALARMS
-             */
-            byte dndStateWatch = data[0];
+            boolean shouldSync = prefs.getBoolean("watch_dnd_sync_key", false);
 
-            /*
-             * Byte 1 = Bedtime
-             *
-             * 0 = OFF
-             * 1 = ON
-             * 2 = NO CHANGE
-             */
-            byte bedtimeStateWatch = data[1];
-
-            Log.d(TAG, "Received from watch: DND=" + dndStateWatch + ", Bedtime=" + bedtimeStateWatch);
-
-            if (dndStateWatch < 0 || dndStateWatch > 4) {
-                Log.d(TAG, "Invalid DND state: " + dndStateWatch);
-                continue;
-            }
-
-            if (bedtimeStateWatch < 0 || bedtimeStateWatch > 2) {
-                Log.d(TAG, "Invalid Bedtime state: " + bedtimeStateWatch);
-                continue;
-            }
-
-            /*
-             * Apply DND received from watch
-             * to the PHONE.
-             */
-            NotificationManager notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
-
-            int currentDndState = notificationManager.getCurrentInterruptionFilter();
-
-            if (dndStateWatch != currentDndState) {
-
-                Log.d(TAG, "Changing phone DND from " + currentDndState + " to " + dndStateWatch);
-
-                if (notificationManager.isNotificationPolicyAccessGranted()) {
-
-                    notificationManager.setInterruptionFilter(dndStateWatch);
-
-                    Log.d(TAG, "DND set to " + dndStateWatch);
-
+            if (currentDndState != dndStateWear && shouldSync) {
+                Log.d(TAG, "currentDndState != dndStateWear: " + currentDndState + " != " + dndStateWear);
+                if (mNotificationManager.isNotificationPolicyAccessGranted()) {
+                    mNotificationManager.setInterruptionFilter(dndStateWear);
+                    Log.d(TAG, "DND set to " + dndStateWear);
                 } else {
-                    Log.d(TAG, "DND access not granted");
+                    Log.d(TAG, "attempting to set DND but access not granted");
                 }
             }
 
-            /*
-             * Bedtime from watch.
-             *
-             * 2 means:
-             * don't change phone Bedtime.
-             */
-            if (bedtimeStateWatch == 1) {
-
-                Log.d(TAG, "Watch Bedtime = ON");
-
-                // Handle phone Bedtime ON if required.
-
-            } else if (bedtimeStateWatch == 0) {
-
-                Log.d(TAG, "Watch Bedtime = OFF");
-
-                // Handle phone Bedtime OFF if required.
-
-            } else {
-
-                Log.d(TAG, "Watch Bedtime = NO CHANGE");
-            }
+        } else {
+            super.onMessageReceived(messageEvent);
         }
     }
+
 }
