@@ -54,11 +54,12 @@ Note: This is only tested on my Galaxy Watch 4 and it might not work on other de
 `adb shell cmd notification allow_listener in.dreadedlama.dndsync/in.dreadedlama.dndsync.DNDNotificationService`  
 This allows the app to listen to DND changes and changing the DND setting
 * scroll to the permission section and check if DND permission says _access granted_ (you might need to tap on the menu entry for it to update)
-* If you want to use the Bedtime mode feature you have to grant the app access to modify secure settings.
-Grant permission for Secure Setting access
-
+* If you want to use the Bedtime mode feature you have to grant the app access to modify secure settings, grant permission for Secure Setting access
   `adb shell pm grant in.dreadedlama.dndsync android.permission.WRITE_SECURE_SETTINGS`
 * This allows the app to change BedTime mode directly without the need for accessibility.
+* **SAMSUNG WATCH ONLY** - If you want to use the Bedtime mode feature on your Samsung watch and want to show the Bedtime screen overlay on watch, grant the app permission to show overlay windows with the following command:
+  `adb shell appops set in.dreadedlama.dndsync SYSTEM_ALERT_WINDOW allow`
+
 You can enable this by enabling the _Bedtime Mode_ Setting in the App.
 * _**IMPORTANT: Disable ADB debugging after you are done because it drains the battery!**_
 * If you enable the setting _Sync DND_ in the App a DND change on the watch will lead to a DND change on the phone
