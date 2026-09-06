@@ -69,17 +69,14 @@ public class DNDSyncListenerService extends WearableListenerService {
             }
 
             String settingBedtimeStr = "setting_bedtime_mode_running_state";
-            int currentBedtimeState = Settings.Global.getInt(
-                    getApplicationContext().getContentResolver(), settingBedtimeStr, -1);
+            int currentBedtimeState = Settings.Global.getInt(getApplicationContext().getContentResolver(), settingBedtimeStr, -1);
 
             if (currentBedtimeState != -1) {
                 Log.d(TAG, "watch is the galaxy watch");
             } else {
                 Log.d(TAG, "watch is not the galaxy watch");
-
                 settingBedtimeStr = "bedtime_mode";
-                currentBedtimeState = Settings.Global.getInt(
-                        getApplicationContext().getContentResolver(), settingBedtimeStr, -1);
+                currentBedtimeState = Settings.Global.getInt(getApplicationContext().getContentResolver(), settingBedtimeStr, -1);
             }
 
             Log.d(TAG, "currentBedtimeState: " + currentBedtimeState);
@@ -138,31 +135,45 @@ public class DNDSyncListenerService extends WearableListenerService {
         String manufacturer = android.os.Build.MANUFACTURER;
         boolean isSamsung = manufacturer.equalsIgnoreCase(SAMSUNG);
 
+        boolean bedtimeModeSuccess = setGlobalSettingIfPresent(settingBedtimeStr, newSetting);
+        boolean zenModeSuccess = setGlobalSettingIfPresent("zen_mode", newSetting);
+        boolean nightDisplayActivated = setSecureSettingIfPresent("night_display_activated", newSetting);
 
-        boolean bedtimeModeSuccess = Settings.Global.putInt(
-                getApplicationContext().getContentResolver(), settingBedtimeStr, newSetting);
-        boolean zenModeSuccess = Settings.Global.putInt(
-                getApplicationContext().getContentResolver(), "zen_mode", newSetting);
-
-        if(isSamsung) {
+        if (isSamsung) {
             handler.removeCallbacks(samsungBedtimeLauncher);
-            handler.postDelayed(samsungBedtimeLauncher, 1500);
+            handler.postDelayed(samsungBedtimeLauncher, 1000);
         }
+        return bedtimeModeSuccess && zenModeSuccess && nightDisplayActivated;
+    }
 
-        return bedtimeModeSuccess && zenModeSuccess;
+    private boolean setGlobalSettingIfPresent(String settingName, int value) {
+        try {
+            if (Settings.Global.getString(getContentResolver(), settingName) == null) {
+                return true;
+            }
+            return Settings.Global.putInt(getContentResolver(), settingName, value);
+        } catch (Exception e) {
+            return true;
+        }
+    }
+
+    private boolean setSecureSettingIfPresent(String settingName, int value) {
+        try {
+            if (Settings.Secure.getString(getContentResolver(), settingName) == null) {
+                return true;
+            }
+            return Settings.Secure.putInt(getContentResolver(), settingName, value);
+        } catch (SecurityException e) {
+            return true;
+        }
     }
 
     private boolean changePowerModeSetting(int newSetting) {
 
-        boolean lowPower = Settings.Global.putInt(
-                getApplicationContext().getContentResolver(), "low_power", newSetting);
-        boolean restrictedDevicePerformance = Settings.Global.putInt(
-                getApplicationContext().getContentResolver(), "restricted_device_performance", newSetting);
-
-        boolean lowPowerBackDataOff = Settings.Global.putInt(
-                getApplicationContext().getContentResolver(), "low_power_back_data_off", newSetting);
-        boolean smConnectivityDisable = Settings.Secure.putInt(
-                getApplicationContext().getContentResolver(), "sm_connectivity_disable", newSetting);
+        boolean lowPower = setGlobalSettingIfPresent("low_power", newSetting);
+        boolean restrictedDevicePerformance = setGlobalSettingIfPresent("restricted_device_performance", newSetting);
+        boolean lowPowerBackDataOff = setGlobalSettingIfPresent("low_power_back_data_off", newSetting);
+        boolean smConnectivityDisable = setSecureSettingIfPresent("sm_connectivity_disable", newSetting);
 
         // screen timeout should be set to 10000 also, and ambient_tilt_to_wake should be set to 0
         // but previous variable states in those 2 cases must be stored and they do not seem to stick
