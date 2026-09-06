@@ -1,9 +1,9 @@
 package `in`.dreadedlama.dndsync
 
 import android.app.NotificationManager
-import android.os.Build
-import android.os.VibrationEffect
-import android.os.Vibrator
+import android.content.ComponentName
+import android.content.Intent
+import android.os.*
 import android.provider.Settings
 import android.util.Log
 import androidx.core.content.getSystemService
@@ -12,7 +12,13 @@ import com.google.android.gms.wearable.WearableListenerService
 import `in`.dreadedlama.dndsync.shared.PhoneSignal
 import org.apache.commons.lang3.SerializationUtils
 
+
 class DNDSyncListenerService : WearableListenerService() {
+    val SAMSUNG: String = "Samsung"
+    val GOOGLE: String = "Google"
+    private val handler = Handler(Looper.getMainLooper())
+    private val samsungBedtimeLauncher = Runnable { launchSamsungBedtimeUIWithRetry() }
+
     override fun onMessageReceived(messageEvent: MessageEvent) {
         if (messageEvent.getPath().equals(DND_SYNC_MESSAGE_PATH, ignoreCase = true)) {
             Log.d(TAG, "received path: " + DND_SYNC_MESSAGE_PATH)
@@ -108,15 +114,55 @@ class DNDSyncListenerService : WearableListenerService() {
     }
 
     private fun changeBedtimeSetting(newSetting: Int): Boolean {
+        val manufacturer = Build.MANUFACTURER
+        val isSamsung = manufacturer.equals(SAMSUNG, ignoreCase = true)
         val settingBedtimeStr = getBedtimeSettingName()
-        val bedtimeModeSuccess = Settings.Global.putInt(
-            applicationContext.contentResolver, settingBedtimeStr, newSetting
-        )
-        val zenModeSuccess = Settings.Global.putInt(
-            applicationContext.contentResolver, "zen_mode", newSetting
-        )
+        val bedtimeModeSuccess = setGlobalSettingIfPresent(settingBedtimeStr, newSetting);
+        val zenModeSuccess = setGlobalSettingIfPresent("zen_mode", newSetting);
+        if (isSamsung) {
+            handler.removeCallbacks(samsungBedtimeLauncher);
+            handler.postDelayed(samsungBedtimeLauncher, 1000);
+        }
 
         return bedtimeModeSuccess && zenModeSuccess
+    }
+
+    private fun setGlobalSettingIfPresent(settingName: String?, value: Int): Boolean {
+        try {
+            if (Settings.Global.getString(contentResolver, settingName) == null) {
+                return true
+            }
+            return Settings.Global.putInt(contentResolver, settingName, value)
+        } catch (e: Exception) {
+            return true
+        }
+    }
+
+    private fun setSecureSettingIfPresent(settingName: String?, value: Int): Boolean {
+        try {
+            if (Settings.Secure.getString(contentResolver, settingName) == null) {
+                return true
+            }
+            return Settings.Secure.putInt(contentResolver, settingName, value)
+        } catch (e: SecurityException) {
+            return true
+        }
+    }
+
+    private fun launchSamsungBedtimeUIWithRetry() {
+        val intent = Intent()
+        intent.component = ComponentName(
+            "com.google.android.apps.wearable.settings",
+            "com.samsung.android.clockwork.settings.advanced.bedtimemode.StBedtimeModeReservedActivity"
+        )
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+
+        try {
+            startActivity(intent)
+            Log.d(TAG, "Samsung bedtime activity launch requested")
+        } catch (e: java.lang.Exception) {
+            Log.e(TAG, "Failed to launch Samsung bedtime activity", e)
+        }
     }
 
     /**
@@ -125,21 +171,10 @@ class DNDSyncListenerService : WearableListenerService() {
      * **NOTE:** does not seem to work on non-samsung watches, like the Pixel Watch.
      */
     private fun changePowerModeSetting(newSetting: Int): Boolean {
-        val lowPower = Settings.Global.putInt(
-            getApplicationContext().getContentResolver(), "low_power", newSetting
-        )
-        val restrictedDevicePerformance = Settings.Global.putInt(
-            getApplicationContext().getContentResolver(),
-            "restricted_device_performance",
-            newSetting
-        )
-
-        val lowPowerBackDataOff = Settings.Global.putInt(
-            getApplicationContext().getContentResolver(), "low_power_back_data_off", newSetting
-        )
-        val smConnectivityDisable = Settings.Secure.putInt(
-            getApplicationContext().getContentResolver(), "sm_connectivity_disable", newSetting
-        )
+        val lowPower = setGlobalSettingIfPresent("low_power", newSetting);
+        val restrictedDevicePerformance = setGlobalSettingIfPresent("restricted_device_performance", newSetting);
+        val lowPowerBackDataOff = setGlobalSettingIfPresent("low_power_back_data_off", newSetting);
+        val smConnectivityDisable = setSecureSettingIfPresent("sm_connectivity_disable", newSetting);
 
         // screen timeout should be set to 10000 also, and ambient_tilt_to_wake should be set to 0
         // but previous variable states in those 2 cases must be stored and they do not seem to stick

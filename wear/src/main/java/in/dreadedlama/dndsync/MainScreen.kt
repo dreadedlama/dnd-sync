@@ -1,11 +1,10 @@
 package `in`.dreadedlama.dndsync
 
+import android.Manifest
 import android.app.NotificationManager
 import android.content.Context
 import android.content.pm.PackageManager
-import androidx.compose.runtime.Composable
-import androidx.core.content.ContextCompat
-import android.Manifest
+import android.provider.Settings
 import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.layout.Spacer
@@ -16,12 +15,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.compose.LocalLifecycleOwner
-import androidx.wear.compose.material.Chip
-import androidx.wear.compose.material.ChipDefaults
-import androidx.wear.compose.material.Icon
-import androidx.wear.compose.material.MaterialTheme
-import androidx.wear.compose.material.Text
+import androidx.wear.compose.material.*
 import com.google.android.gms.tasks.Tasks
 import com.google.android.gms.wearable.CapabilityClient
 import com.google.android.gms.wearable.Node
@@ -37,6 +33,7 @@ import kotlinx.coroutines.tasks.await
 fun MainScreen(context: Context) {
     var dndPermissionGranted = checkDNDPermission(context)
     var secureSettingsPermissionGranted = checkSecureSettingsPermission(context)
+    var systemAlertWindowPermisisonGranted = checkSystemAlertWindowPermission(context)
     val lifecycleOwner = LocalLifecycleOwner.current
     val state by lifecycleOwner.lifecycle.currentStateFlow.collectAsState()
     var isConnected by remember { mutableStateOf(false) }
@@ -44,6 +41,7 @@ fun MainScreen(context: Context) {
     LaunchedEffect(state) {
         dndPermissionGranted = checkDNDPermission(context)
         secureSettingsPermissionGranted = checkSecureSettingsPermission(context)
+        systemAlertWindowPermisisonGranted = checkSystemAlertWindowPermission(context)
         val capabilityClient = Wearable.getCapabilityClient(context)
         val capabilityInfo = capabilityClient
             .getCapability("dnd_sync", CapabilityClient.FILTER_REACHABLE)
@@ -92,6 +90,8 @@ fun MainScreen(context: Context) {
             ) {
                 dndPermissionGranted = checkDNDPermission(context)
                 secureSettingsPermissionGranted = checkSecureSettingsPermission(context)
+                systemAlertWindowPermisisonGranted = checkSystemAlertWindowPermission(context)
+
             }
         }
         item {
@@ -114,6 +114,30 @@ fun MainScreen(context: Context) {
             ) {
                 dndPermissionGranted = checkDNDPermission(context)
                 secureSettingsPermissionGranted = checkSecureSettingsPermission(context)
+                systemAlertWindowPermisisonGranted = checkSystemAlertWindowPermission(context)
+            }
+        }
+        item {
+            StatusItem(
+                stringResource(R.string.system_alert_window_permission_title),
+                systemAlertWindowPermisisonGranted,
+                context,
+                icon = {
+                    Icon(
+                        painter = painterResource(
+                            id = if (systemAlertWindowPermisisonGranted) {
+                                R.drawable.lock
+                            } else {
+                                R.drawable.no_encryption
+                            }
+                        ),
+                        contentDescription = stringResource(R.string.system_alert_window_permission_title)
+                    )
+                }
+            ) {
+                dndPermissionGranted = checkDNDPermission(context)
+                secureSettingsPermissionGranted = checkSecureSettingsPermission(context)
+                systemAlertWindowPermisisonGranted = checkSystemAlertWindowPermission(context)
             }
         }
         item {
@@ -232,6 +256,10 @@ fun checkSecureSettingsPermission(context: Context): Boolean {
         context,
         Manifest.permission.WRITE_SECURE_SETTINGS
     ) == PackageManager.PERMISSION_GRANTED;
+}
+
+fun checkSystemAlertWindowPermission(context: Context?): Boolean {
+    return Settings.canDrawOverlays(context);
 }
 
 /**
