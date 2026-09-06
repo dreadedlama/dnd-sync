@@ -4,6 +4,7 @@ import android.Manifest
 import android.app.NotificationManager
 import android.content.Context
 import android.content.pm.PackageManager
+import android.os.Build
 import android.provider.Settings
 import android.util.Log
 import android.widget.Toast
@@ -117,27 +118,29 @@ fun MainScreen(context: Context) {
                 systemAlertWindowPermisisonGranted = checkSystemAlertWindowPermission(context)
             }
         }
-        item {
-            StatusItem(
-                stringResource(R.string.system_alert_window_permission_title),
-                systemAlertWindowPermisisonGranted,
-                context,
-                icon = {
-                    Icon(
-                        painter = painterResource(
-                            id = if (systemAlertWindowPermisisonGranted) {
-                                R.drawable.lock
-                            } else {
-                                R.drawable.no_encryption
-                            }
-                        ),
-                        contentDescription = stringResource(R.string.system_alert_window_permission_title)
-                    )
+        if (Build.MANUFACTURER.equals("Samsung", ignoreCase = true)) {
+            item {
+                StatusItem(
+                    stringResource(R.string.system_alert_window_permission_title),
+                    systemAlertWindowPermisisonGranted,
+                    context,
+                    icon = {
+                        Icon(
+                            painter = painterResource(
+                                id = if (systemAlertWindowPermisisonGranted) {
+                                    R.drawable.lock
+                                } else {
+                                    R.drawable.no_encryption
+                                }
+                            ),
+                            contentDescription = stringResource(R.string.system_alert_window_permission_title)
+                        )
+                    }
+                ) {
+                    dndPermissionGranted = checkDNDPermission(context)
+                    secureSettingsPermissionGranted = checkSecureSettingsPermission(context)
+                    systemAlertWindowPermisisonGranted = checkSystemAlertWindowPermission(context)
                 }
-            ) {
-                dndPermissionGranted = checkDNDPermission(context)
-                secureSettingsPermissionGranted = checkSecureSettingsPermission(context)
-                systemAlertWindowPermisisonGranted = checkSystemAlertWindowPermission(context)
             }
         }
         item {

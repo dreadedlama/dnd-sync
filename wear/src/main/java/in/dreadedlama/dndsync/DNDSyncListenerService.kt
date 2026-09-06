@@ -15,16 +15,17 @@ import org.apache.commons.lang3.SerializationUtils
 
 class DNDSyncListenerService : WearableListenerService() {
     val SAMSUNG: String = "Samsung"
-    val GOOGLE: String = "Google"
+    val manufacturer: String? = Build.MANUFACTURER
+    val isSamsung = manufacturer.equals(SAMSUNG, ignoreCase = true)
     private val handler = Handler(Looper.getMainLooper())
     private val samsungBedtimeLauncher = Runnable { launchSamsungBedtimeUIWithRetry() }
 
     override fun onMessageReceived(messageEvent: MessageEvent) {
         if (messageEvent.getPath().equals(DND_SYNC_MESSAGE_PATH, ignoreCase = true)) {
-            Log.d(TAG, "received path: " + DND_SYNC_MESSAGE_PATH)
+            Log.d(TAG, "received path: $DND_SYNC_MESSAGE_PATH")
 
             // data is now a PhoneSignal object, it must be deserialized
-            val data = messageEvent.getData()
+            val data = messageEvent.data
             val phoneSignal = SerializationUtils.deserialize<PhoneSignal>(data)
 
             Log.d(TAG, "dndStatePhone: " + phoneSignal.dndState)
@@ -33,7 +34,7 @@ class DNDSyncListenerService : WearableListenerService() {
             val mNotificationManager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
             val currentDndState = mNotificationManager.getCurrentInterruptionFilter()
 
-            Log.d(TAG, "currentDndState: " + currentDndState)
+            Log.d(TAG, "currentDndState: $currentDndState")
             if (currentDndState < 0 || currentDndState > 4) {
                 Log.d(TAG, "Current DND state is suspicious, should be in range [0,4]")
             }
@@ -101,30 +102,31 @@ class DNDSyncListenerService : WearableListenerService() {
     }
 
     private fun changeDndSetting(mNotificationManager: NotificationManager, newSetting: Int) {
-        if (mNotificationManager.isNotificationPolicyAccessGranted()) {
+        if (mNotificationManager.isNotificationPolicyAccessGranted) {
             mNotificationManager.setInterruptionFilter(newSetting)
-            Log.d(TAG, "DND set to " + newSetting)
+            Log.d(TAG, "DND set to $newSetting")
         } else {
             Log.d(TAG, "attempting to set DND but access not granted")
         }
     }
 
     private fun getBedtimeSettingName(): String {
-        return if (Build.MANUFACTURER == "samsung") "setting_bedtime_mode_running_state" else "bedtime_mode"
+        return if (isSamsung) "setting_bedtime_mode_running_state" else "bedtime_mode"
     }
 
     private fun changeBedtimeSetting(newSetting: Int): Boolean {
-        val manufacturer = Build.MANUFACTURER
-        val isSamsung = manufacturer.equals(SAMSUNG, ignoreCase = true)
-        val settingBedtimeStr = getBedtimeSettingName()
-        val bedtimeModeSuccess = setGlobalSettingIfPresent(settingBedtimeStr, newSetting);
+
+        val bedtimeModeSuccess = setGlobalSettingIfPresent(getBedtimeSettingName(), newSetting);
         val zenModeSuccess = setGlobalSettingIfPresent("zen_mode", newSetting);
+        val nightDisplayActivated = setSecureSettingIfPresent("night_display_activated", newSetting);
+
+        // Trigger Samsung bedtime UI launch
         if (isSamsung) {
             handler.removeCallbacks(samsungBedtimeLauncher);
             handler.postDelayed(samsungBedtimeLauncher, 1000);
         }
 
-        return bedtimeModeSuccess && zenModeSuccess
+        return bedtimeModeSuccess && zenModeSuccess && nightDisplayActivated
     }
 
     private fun setGlobalSettingIfPresent(settingName: String?, value: Int): Boolean {
