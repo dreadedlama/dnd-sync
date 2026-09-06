@@ -17,7 +17,6 @@ public class WearSignal implements Serializable {
         // 3 = INTERRUPTION_FILTER_NONE (no notification passes)
         // 4 = INTERRUPTION_FILTER_ALARMS
         if (0 <= dndState && dndState <= 4) {
-
             this.dndState = dndState;
         }
     }

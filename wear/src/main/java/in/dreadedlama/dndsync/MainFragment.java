@@ -24,6 +24,7 @@ public class MainFragment extends PreferenceFragmentCompat {
         secureSettingsPref = findPreference("secure_settings_permission_key");
         systemAlertWindowPref = findPreference("system_alert_window_permission_key");
 
+
         dndPref.setOnPreferenceClickListener(preference -> {
             if (!checkDNDPermission()) {
                 Toast.makeText(getContext(), "Follow the instructions to grant the permission via ADB!", Toast.LENGTH_SHORT).show();

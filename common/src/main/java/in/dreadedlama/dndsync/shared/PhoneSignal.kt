@@ -1,23 +1,20 @@
-package in.dreadedlama.dndsync.shared;
+package `in`.dreadedlama.dndsync.shared
 
-import android.content.SharedPreferences;
+import android.content.SharedPreferences
+import java.io.Serializable
 
-import java.io.Serializable;
-
-public class PhoneSignal implements Serializable {
-
+class PhoneSignal(dndState: Int, prefs: SharedPreferences) : Serializable {
     // dndState and bedtimeState will be null if the signal to sent is not related
     // to those two states
-    public Integer dndState = null;
-    public Integer bedtimeState = null;
-    public boolean powersavePref = false;
-    public boolean vibratePref = false;
+    var dndState: Int? = null
+    var bedtimeState: Int? = null
+    var powersavePref: Boolean = false
+    var vibratePref: Boolean = false
 
-    public PhoneSignal(Integer dndState, SharedPreferences prefs) {
-
-        boolean dndAsBedtime = prefs.getBoolean("dnd_as_bedtime_key", false);
-        this.powersavePref = prefs.getBoolean("power_save_key", false);
-        this.vibratePref = prefs.getBoolean("watch_vibrate_key", false);
+    init {
+        val dndAsBedtime = prefs.getBoolean(PreferenceKeys.DndAsBedtime.key, PreferenceKeys.DndAsBedtime.defaultValue)
+        this.powersavePref = prefs.getBoolean(PreferenceKeys.PowerSave.key, PreferenceKeys.PowerSave.defaultValue)
+        this.vibratePref = prefs.getBoolean(PreferenceKeys.WatchVibrate.key, PreferenceKeys.WatchVibrate.defaultValue)
 
         // DnD disabled:
         // 0 = INTERRUPTION_FILTER_UNKNOWN
@@ -32,21 +29,19 @@ public class PhoneSignal implements Serializable {
         // 5 = BEDTIME ON
         // 6 = BEDTIME OFF
         if (0 <= dndState && dndState <= 4) {
-
-            this.dndState = dndState;
+            this.dndState = dndState
 
             if (dndAsBedtime && dndState > 1) {
                 // dndState > 1 means that it's enabled
-                this.bedtimeState = 1;
+                this.bedtimeState = 1
             } else if (dndAsBedtime) {
                 // in this branch dndState < 1, so it's disabled
-                this.bedtimeState = 0;
+                this.bedtimeState = 0
             }
-
         } else if (dndState == 5 || dndState == 6) {
-
             // dndState == 5 means bedtime on, dndState == 6 means bedtime off
-            this.bedtimeState = dndState == 5 ? 1 : 0;
+
+            this.bedtimeState = if (dndState == 5) 1 else 0
         }
     }
 }

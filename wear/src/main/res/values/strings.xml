@@ -16,6 +16,9 @@
     <string name="secure_settings_permission_allowed">Secure Settings access granted</string>
     <string name="secure_settings_permission_not_allowed">Secure Settings access denied</string>
 
+    <string name="phone_title">Phone</string>
+    <string name="phone_connected">Connected</string>
+    <string name="phone_not_connected">Disconnected</string>
     <!-- Permission Preferences -->
     <string name="system_alert_window_permission_title">System Alert Window Permission</string>
     <string name="system_alert_window_permission_allowed">System Alert Window access granted</string>

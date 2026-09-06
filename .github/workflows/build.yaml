@@ -1,0 +1,111 @@
+name: Build for Android
+
+on:
+  release:
+    types:
+      - published
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Set up JDK
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'zulu'
+          java-version: '21'
+
+      - name: Get Latest Release
+        id: release
+        uses: pozetroninc/github-action-get-latest-release@v0.8.0
+        with:
+          owner: ${{ github.repository_owner }}
+          repo: ${{ github.event.repository.name }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+          excludes: "prerelease, draft"
+
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+
+      - name: Cache
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-android-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-android-
+
+      # -------------------------
+      # Build & Sign MOBILE
+      # -------------------------
+      - name: Build mobile
+        run: ./gradlew :mobile:assembleRelease
+
+      - name: Sign mobile APK
+        id: sign_mobile
+        uses: zacharee/zipalign-sign-android-release@2.0.0
+        with:
+          releaseDirectory: mobile/build/outputs/apk/release
+          signingKeyBase64: ${{ secrets.ANDROID_SIGNING_KEY }}
+          alias: ${{ secrets.ANDROID_SIGNING_KEY_ALIAS }}
+          keyStorePassword: ${{ secrets.ANDROID_SIGNING_KEY_PWD }}
+          keyPassword: ${{ secrets.ANDROID_SIGNING_KEY_PWD }}
+        env:
+          BUILD_TOOLS_VERSION: "35.0.0"
+
+      - name: Upload mobile APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Mobile APK
+          path: ${{ steps.sign_mobile.outputs.signedReleaseFile }}
+
+      - name: Attach mobile APK to release
+        uses: ncipollo/release-action@v1
+        with:
+          artifacts: ${{ github.workspace }}/${{ steps.sign_mobile.outputs.signedReleaseFile }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+          allowUpdates: true
+          omitBodyDuringUpdate: true
+          tag: ${{ steps.release.outputs.release }}
+
+      # -------------------------
+      # Build & Sign WEAR
+      # -------------------------
+      - name: Build wear
+        run: ./gradlew :wear:assembleRelease
+
+      - name: Sign wear APK
+        id: sign_wear
+        uses: zacharee/zipalign-sign-android-release@2.0.0
+        with:
+          releaseDirectory: wear/build/outputs/apk/release
+          signingKeyBase64: ${{ secrets.ANDROID_SIGNING_KEY }}
+          alias: ${{ secrets.ANDROID_SIGNING_KEY_ALIAS }}
+          keyStorePassword: ${{ secrets.ANDROID_SIGNING_KEY_PWD }}
+          keyPassword: ${{ secrets.ANDROID_SIGNING_KEY_PWD }}
+        env:
+          BUILD_TOOLS_VERSION: "35.0.0"
+
+      - name: Upload wear APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Wear APK
+          path: ${{ steps.sign_wear.outputs.signedReleaseFile }}
+
+      - name: Attach wear APK to release
+        uses: ncipollo/release-action@v1
+        with:
+          artifacts: ${{ github.workspace }}/${{ steps.sign_wear.outputs.signedReleaseFile }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+          allowUpdates: true
+          omitBodyDuringUpdate: true
+          tag: ${{ steps.release.outputs.release }}
