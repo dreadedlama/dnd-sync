@@ -20,7 +20,7 @@ android {
         applicationId "in.dreadedlama.dndsync"
         minSdk 30
         targetSdk 31
-        versionCode 5
+        versionCode 6
         versionName "3.0"
     }
 

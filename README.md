@@ -15,9 +15,10 @@ is only newly available for the newest Pixel Watch 2:
 
 Most of the credit goes to [@rhaeus](https://github.com/rhaeus) for the original development of this app.
 
-I ([@dreadedlama](https://github.com/dreadedlama)) initially forked the project and worked on improving the Bedtime Mode implementation. [@Silleellie](https://github.com/Silleellie) later referenced and incorporated those changes into his own fork, along with additional improvements. **A big thanks to [@Silleellie](https://github.com/Silleellie) for building on those changes and for the additional improvements.**
+I ([@dreadedlama](https://github.com/dreadedlama)) initially forked the project and worked on improving the Bedtime Mode implementation. [@Silleellie](https://github.com/Silleellie) later built on those changes in his own fork and added further improvements. [@Turtlepaw](https://github.com/Turtlepaw) subsequently took the project further with his own fork, including a Material 3 design to it.
+**A big thank you to [@Silleellie](https://github.com/Silleellie) and [@Turtlepaw](https://github.com/Turtlepaw) for building on the project and contributing these improvements.**
 
-I have since incorporated the changes from [@Silleellie](https://github.com/Silleellie)'s fork into this fork as well, so this project now includes improvements from both branches while remaining based on the original work by [@rhaeus](https://github.com/rhaeus).
+I have since incorporated changes from both [@Silleellie](https://github.com/Silleellie)'s and [@Turtlepaw](https://github.com/Turtlepaw)'s forks into this fork. This project therefore combines improvements from both branches along with my own changes.
 
 ## Setup
 
@@ -32,8 +33,7 @@ I have since incorporated the changes from [@Silleellie](https://github.com/Sill
 ### Phone
 
 <p float="left">
-  <img src="/images/mobile_1.png" width="300" />
-  <img src="/images/mobile_2.png" width="300" />
+  <img src="/images/mobile.png" width="300" />
 </p>
 
 1. Install the app `mobile-release.apk` on the phone via *adb*
