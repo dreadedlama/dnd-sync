@@ -137,13 +137,12 @@ public class DNDSyncListenerService extends WearableListenerService {
 
         boolean bedtimeModeSuccess = setGlobalSettingIfPresent(settingBedtimeStr, newSetting);
         boolean zenModeSuccess = setGlobalSettingIfPresent("zen_mode", newSetting);
-        boolean nightDisplayActivated = setSecureSettingIfPresent("night_display_activated", newSetting);
 
         if (isSamsung) {
             handler.removeCallbacks(samsungBedtimeLauncher);
             handler.postDelayed(samsungBedtimeLauncher, 1000);
         }
-        return bedtimeModeSuccess && zenModeSuccess && nightDisplayActivated;
+        return bedtimeModeSuccess && zenModeSuccess;
     }
 
     private boolean setGlobalSettingIfPresent(String settingName, int value) {
