@@ -137,24 +137,19 @@ public class DNDSyncListenerService extends WearableListenerService {
 
         String manufacturer = android.os.Build.MANUFACTURER;
         boolean isSamsung = manufacturer.equalsIgnoreCase(SAMSUNG);
-        boolean isGoogle = manufacturer.equalsIgnoreCase(GOOGLE);
-        boolean googleBedtimeModeSuccess = true;
 
 
         boolean bedtimeModeSuccess = Settings.Global.putInt(
                 getApplicationContext().getContentResolver(), settingBedtimeStr, newSetting);
         boolean zenModeSuccess = Settings.Global.putInt(
                 getApplicationContext().getContentResolver(), "zen_mode", newSetting);
-        if(isGoogle) {
-            googleBedtimeModeSuccess = Settings.Global.putInt(getContentResolver(), "bedtime_mode", newSetting);
-        }
 
         if(isSamsung) {
             handler.removeCallbacks(samsungBedtimeLauncher);
             handler.postDelayed(samsungBedtimeLauncher, 1500);
         }
 
-        return bedtimeModeSuccess && zenModeSuccess && googleBedtimeModeSuccess;
+        return bedtimeModeSuccess && zenModeSuccess;
     }
 
     private boolean changePowerModeSetting(int newSetting) {
