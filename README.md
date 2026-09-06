@@ -13,12 +13,14 @@ is only newly available for the newest Pixel Watch 2:
   * At night, when I charge my phone, bedtime mode on the phone is enabled and I wanted to sync and enable same mode on the watch
 * Automatically toggle **Power Saver** mode in combo with bedtime mode on the watch, whenever bedtime mode is synced from the phone
 
+### Credits
+
 Most of the credit goes to [@rhaeus](https://github.com/rhaeus) for the original development of this app.
-
 I ([@dreadedlama](https://github.com/dreadedlama)) initially forked the project and worked on improving the Bedtime Mode implementation. [@Silleellie](https://github.com/Silleellie) later built on those changes in his own fork and added further improvements. [@Turtlepaw](https://github.com/Turtlepaw) subsequently took the project further with his own fork, including a Material 3 design to it.
-**A big thank you to [@Silleellie](https://github.com/Silleellie) and [@Turtlepaw](https://github.com/Turtlepaw) for building on the project and contributing these improvements.**
 
-I have since incorporated changes from both [@Silleellie](https://github.com/Silleellie)'s and [@Turtlepaw](https://github.com/Turtlepaw)'s forks into this fork. This project therefore combines improvements from both branches along with my own changes.
+**A big thanks to Silleellie and Turtlepaw for building on the project and contributing these improvements.**
+
+I have since incorporated changes from both Silleellie's and Turtlepaw's forks into this fork. This project therefore combines improvements from both branches along with my own changes.
 
 ## Setup
 
