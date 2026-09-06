@@ -187,6 +187,20 @@ fun MainScreen(context: Context) {
                         },
                         enabled = permissionsGranted
                     )
+
+                    // Power Save Switch
+                    item(
+                        leadingText = R.string.enable_power_saving_title,
+                        //supportingText = R.string.sync_bedtime_desc,
+                        icon = {
+                            Icon(painterResource(R.drawable.battery_saver), contentDescription = "Power Saving")
+                        },
+                        checked = powerSaveEnabled,
+                        onCheckedChange = {
+                            viewModel.setPowerSaveState(it)
+                        },
+                        enabled = bedtimeSync && permissionsGranted
+                    )
                 }
 
                 val watchSync = viewModel.watchSync.collectAsState().value
