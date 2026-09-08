@@ -10,11 +10,13 @@ class PhoneSignal(dndState: Int, prefs: SharedPreferences) : Serializable {
     var bedtimeState: Int? = null
     var powersavePref: Boolean = false
     var vibratePref: Boolean = false
+    var bedtimeNoDndPref: Boolean = false
 
     init {
         val dndAsBedtime = prefs.getBoolean(PreferenceKeys.DndAsBedtime.key, PreferenceKeys.DndAsBedtime.defaultValue)
         this.powersavePref = prefs.getBoolean(PreferenceKeys.PowerSave.key, PreferenceKeys.PowerSave.defaultValue)
         this.vibratePref = prefs.getBoolean(PreferenceKeys.WatchVibrate.key, PreferenceKeys.WatchVibrate.defaultValue)
+        this.bedtimeNoDndPref = prefs.getBoolean(PreferenceKeys.BedtimeNoDnd.key, PreferenceKeys.BedtimeNoDnd.defaultValue)
 
         // DnD disabled:
         // 0 = INTERRUPTION_FILTER_UNKNOWN

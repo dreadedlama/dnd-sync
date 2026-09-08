@@ -26,6 +26,9 @@ class MainViewModel(val app: Application) : AndroidViewModel(app) {
     private val _bedtimeSync = MutableStateFlow(false)
     val bedtimeSync: StateFlow<Boolean> = _bedtimeSync
 
+    private val _bedtimeNoDnd = MutableStateFlow(false)
+    val bedtimeNoDnd: StateFlow<Boolean> = _bedtimeNoDnd
+
     private val _powerSaveEnabled = MutableStateFlow(false)
     val powerSaveEnabled: StateFlow<Boolean> = _powerSaveEnabled
 
@@ -62,6 +65,7 @@ class MainViewModel(val app: Application) : AndroidViewModel(app) {
     fun initiateStates() {
         _dndAsBedtime.value = preferencesHelper.getValue(PreferenceKeys.DndAsBedtime)
         _bedtimeSync.value = preferencesHelper.getValue(PreferenceKeys.BedtimeSync)
+        _bedtimeNoDnd.value = preferencesHelper.getValue(PreferenceKeys.BedtimeNoDnd)
         _powerSaveEnabled.value = preferencesHelper.getValue(PreferenceKeys.PowerSave)
         _dndSync.value = preferencesHelper.getValue(PreferenceKeys.DndSync)
         _watchSync.value = preferencesHelper.getValue(PreferenceKeys.WatchDndSync)
@@ -115,6 +119,11 @@ class MainViewModel(val app: Application) : AndroidViewModel(app) {
     fun setBedtimeSync(value: Boolean) {
         _bedtimeSync.value = value
         preferencesHelper.setValue(PreferenceKeys.BedtimeSync, value)
+    }
+
+    fun setBedtimeNoDnd(value: Boolean) {
+        _bedtimeNoDnd.value = value
+        preferencesHelper.setValue(PreferenceKeys.BedtimeNoDnd, value)
     }
 
     fun setDndSync(value: Boolean) {

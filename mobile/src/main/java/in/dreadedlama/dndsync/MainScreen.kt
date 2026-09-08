@@ -54,6 +54,7 @@ fun MainScreen(context: Context) {
     val viewModel = viewModel<MainViewModel>()
     val dndAsBedtime by viewModel.dndAsBedtime.collectAsState()
     val bedtimeSync by viewModel.bedtimeSync.collectAsState()
+    val bedtimeNoDnd by viewModel.bedtimeNoDnd.collectAsState()
     val powerSaveEnabled by viewModel.powerSaveEnabled.collectAsState()
     val dndPermissionGranted by viewModel.dndPermissionGranted.collectAsState()
     val notificationState by viewModel.notificationState.collectAsState()
@@ -186,6 +187,20 @@ fun MainScreen(context: Context) {
                             viewModel.setBedtimeSync(it)
                         },
                         enabled = permissionsGranted
+                    )
+
+                    // Bedtime only (No DND) Switch
+                    item(
+                        leadingText = R.string.bedtime_no_dnd_title,
+                        supportingText = R.string.bedtime_no_dnd_desc,
+                        icon = {
+                            Icon(painterResource(R.drawable.bedtime), contentDescription = "Bedtime only")
+                        },
+                        checked = bedtimeNoDnd,
+                        onCheckedChange = {
+                            viewModel.setBedtimeNoDnd(it)
+                        },
+                        enabled = bedtimeSync && permissionsGranted
                     )
 
                     // Power Save Switch

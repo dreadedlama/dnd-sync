@@ -72,8 +72,14 @@ class DNDSyncListenerService : WearableListenerService() {
                 // activating/disabling bedtime also activates/disables dnd, just like
                 // when activating bedtime manually from the watch.
                 // dndState = 2 means it's activated, dndState = 1 means it's disabled
-                val dndState = if (phoneSignal.bedtimeState == 1) 2 else 1
-                changeDndSetting(mNotificationManager, dndState)
+                // If the "Bedtime only (no DND)" preference is enabled, we skip changing
+                // the DND state and only toggle bedtime mode for more granular control.
+                if (!phoneSignal.bedtimeNoDndPref) {
+                    val dndState = if (phoneSignal.bedtimeState == 1) 2 else 1
+                    changeDndSetting(mNotificationManager, dndState)
+                } else {
+                    Log.d(TAG, "bedtimeNoDnd enabled: skipping DND change for bedtime sync")
+                }
 
                 val bedtimeModeSuccess = changeBedtimeSetting(phoneSignal.bedtimeState!!)
                 if (bedtimeModeSuccess) {
