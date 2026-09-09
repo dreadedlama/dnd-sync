@@ -14,28 +14,20 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v2
+      - name: Checkout
+        uses: actions/checkout@v4
 
       - name: Set up JDK
-        uses: actions/setup-java@v3
+        uses: actions/setup-java@v4
         with:
-          distribution: 'zulu'
+          distribution: zulu
           java-version: '21'
-
-      - name: Get Latest Release
-        id: release
-        uses: pozetroninc/github-action-get-latest-release@v0.8.0
-        with:
-          owner: ${{ github.repository_owner }}
-          repo: ${{ github.event.repository.name }}
-          token: ${{ secrets.GITHUB_TOKEN }}
-          excludes: "prerelease, draft"
 
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
 
-      - name: Cache
-        uses: actions/cache@v3
+      - name: Cache Gradle
+        uses: actions/cache@v4
         with:
           path: |
             ~/.gradle/caches
@@ -47,6 +39,7 @@ jobs:
       # -------------------------
       # Build & Sign MOBILE
       # -------------------------
+
       - name: Build mobile
         run: ./gradlew :mobile:assembleRelease
 
@@ -62,24 +55,21 @@ jobs:
         env:
           BUILD_TOOLS_VERSION: "35.0.0"
 
+      - name: Rename mobile APK
+        run: |
+          mv "${{ steps.sign_mobile.outputs.signedReleaseFile }}" \
+             "${{ github.workspace }}/mobile-release.apk"
+
       - name: Upload mobile APK artifact
         uses: actions/upload-artifact@v4
         with:
-          name: Mobile APK
-          path: ${{ steps.sign_mobile.outputs.signedReleaseFile }}
-
-      - name: Attach mobile APK to release
-        uses: ncipollo/release-action@v1
-        with:
-          artifacts: ${{ github.workspace }}/${{ steps.sign_mobile.outputs.signedReleaseFile }}
-          token: ${{ secrets.GITHUB_TOKEN }}
-          allowUpdates: true
-          omitBodyDuringUpdate: true
-          tag: ${{ steps.release.outputs.release }}
+          name: mobile-release
+          path: mobile-release.apk
 
       # -------------------------
       # Build & Sign WEAR
       # -------------------------
+
       - name: Build wear
         run: ./gradlew :wear:assembleRelease
 
@@ -95,17 +85,30 @@ jobs:
         env:
           BUILD_TOOLS_VERSION: "35.0.0"
 
+      - name: Rename wear APK
+        run: |
+          mv "${{ steps.sign_wear.outputs.signedReleaseFile }}" \
+             "${{ github.workspace }}/wear-release.apk"
+
       - name: Upload wear APK artifact
         uses: actions/upload-artifact@v4
         with:
-          name: Wear APK
-          path: ${{ steps.sign_wear.outputs.signedReleaseFile }}
+          name: wear-release
+          path: wear-release.apk
 
-      - name: Attach wear APK to release
+      # -------------------------
+      # Attach APKs to GitHub Release
+      # Only runs for published releases
+      # -------------------------
+
+      - name: Attach APKs to release
+        if: github.event_name == 'release'
         uses: ncipollo/release-action@v1
         with:
-          artifacts: ${{ github.workspace }}/${{ steps.sign_wear.outputs.signedReleaseFile }}
+          artifacts: |
+            mobile-release.apk
+            wear-release.apk
           token: ${{ secrets.GITHUB_TOKEN }}
           allowUpdates: true
           omitBodyDuringUpdate: true
-          tag: ${{ steps.release.outputs.release }}
+          tag: ${{ github.event.release.tag_name }}
