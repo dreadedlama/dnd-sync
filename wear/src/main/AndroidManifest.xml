@@ -55,6 +55,14 @@
                     android:path="/wear-dnd-sync"
                     android:scheme="wear" />
             </intent-filter>
+            <intent-filter>
+                <action android:name="com.google.android.gms.wearable.MESSAGE_RECEIVED" />
+
+                <data
+                    android:host="*"
+                    android:path="/request-manufacturer"
+                    android:scheme="wear" />
+            </intent-filter>
         </service>
 
         <!-- grant permission with: adb shell cmd notification allow_listener in.dreadedlama.dndsync/in.dreadedlama.dndsync.DNDNotificationService -->

@@ -44,4 +44,8 @@
     <string name="connectivity_state_title">Connectivity State</string>
     <string name="connectivity_state_connected">Watch Connected</string>
     <string name="connectivity_state_disconnected">Watch Disconnected</string>
+
+    <!-- Watch Manufacturer -->
+    <string name="watch_manufacturer_title">Watch Manufacturer</string>
+    <string name="watch_manufacturer_unknown">Not fetched yet</string>
 </resources>

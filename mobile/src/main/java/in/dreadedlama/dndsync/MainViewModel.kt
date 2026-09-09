@@ -4,12 +4,16 @@ import android.app.Application
 import android.app.NotificationManager
 import android.content.Context
 import android.content.Intent
+import android.content.SharedPreferences
 import android.provider.Settings
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.preference.PreferenceManager
 import com.google.android.gms.wearable.CapabilityClient
 import com.google.android.gms.wearable.Wearable
+import `in`.dreadedlama.dndsync.shared.MessagePaths
 import `in`.dreadedlama.dndsync.shared.PreferenceKeys
+import `in`.dreadedlama.dndsync.shared.StringPreferenceKeys
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
@@ -55,11 +59,30 @@ class MainViewModel(val app: Application) : AndroidViewModel(app) {
     private val _connectivityState = MutableStateFlow(false)
     val connectivityState: StateFlow<Boolean> = _connectivityState
 
+    // Watch manufacturer (fetched once, then immutable)
+    private val _watchManufacturer = MutableStateFlow("")
+    val watchManufacturer: StateFlow<String> = _watchManufacturer
+
+    // Keep the manufacturer state in sync with prefs updated by DNDSyncListenerService.
+    private val prefsListener = SharedPreferences.OnSharedPreferenceChangeListener { _, key ->
+        if (key == StringPreferenceKeys.WATCH_MANUFACTURER) {
+            refreshWatchManufacturer()
+        }
+    }
+
     init {
         // Update power save state based on dndAsBedtime or bedtimeSync
         viewModelScope.launch {
             initiateStates()
         }
+        PreferenceManager.getDefaultSharedPreferences(app)
+            .registerOnSharedPreferenceChangeListener(prefsListener)
+    }
+
+    override fun onCleared() {
+        super.onCleared()
+        PreferenceManager.getDefaultSharedPreferences(app)
+            .unregisterOnSharedPreferenceChangeListener(prefsListener)
     }
 
     fun initiateStates() {
@@ -73,20 +96,66 @@ class MainViewModel(val app: Application) : AndroidViewModel(app) {
 
         _dndPermissionGranted.value = checkDNDPermission()
         _notificationState.value = isNotificationListenerEnabled(app)
+        _watchManufacturer.value = preferencesHelper.getString(StringPreferenceKeys.WATCH_MANUFACTURER)
         updateConnectivityState()
     }
 
     fun updateConnectivityState() {
         viewModelScope.launch {
             _connectivityState.value = getConnectivityState()
+            if (_connectivityState.value) {
+                requestWatchManufacturer()
+            }
             Wearable.getCapabilityClient(app).addListener(
                 {
                     viewModelScope.launch {
                         _connectivityState.value = getConnectivityState()
+                        if (_connectivityState.value) {
+                            requestWatchManufacturer()
+                        }
                     }
                 },
                 "dnd_sync"
             )
+        }
+    }
+
+    /**
+     * Reloads the watch manufacturer from preferences. The manufacturer is written once by
+     * [DNDSyncListenerService] and treated as immutable afterwards.
+     */
+    fun refreshWatchManufacturer() {
+        _watchManufacturer.value = preferencesHelper.getString(StringPreferenceKeys.WATCH_MANUFACTURER)
+    }
+
+    /**
+     * Requests the watch to report its manufacturer, but only if it has not been fetched yet.
+     * This keeps the fetch a one-time operation rather than a continuous sync.
+     */
+    fun requestWatchManufacturer() {
+        if (preferencesHelper.getString(StringPreferenceKeys.WATCH_MANUFACTURER).isNotEmpty()) {
+            // Already known and immutable, nothing to do.
+            return
+        }
+
+        viewModelScope.launch {
+            try {
+                val nodes = Wearable.getCapabilityClient(app).getCapability(
+                    "dnd_sync",
+                    CapabilityClient.FILTER_REACHABLE
+                ).await().nodes
+
+                val messageClient = Wearable.getMessageClient(app)
+                for (node in nodes) {
+                    messageClient.sendMessage(
+                        node.id,
+                        MessagePaths.REQUEST_MANUFACTURER,
+                        ByteArray(0)
+                    ).await()
+                }
+            } catch (e: Exception) {
+                // Best-effort request; will be retried next time connectivity is refreshed.
+            }
         }
     }
 

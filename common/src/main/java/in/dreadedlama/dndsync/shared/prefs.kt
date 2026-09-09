@@ -9,3 +9,17 @@ enum class PreferenceKeys(val key: String, val defaultValue: Boolean = true){
     DndSync("dnd_sync_key", true),
     WatchVibrate("watch_vibrate_key", false),
 }
+
+object StringPreferenceKeys {
+    // Stores the watch manufacturer. Written once and then treated as immutable.
+    const val WATCH_MANUFACTURER = "watch_manufacturer_key"
+}
+
+//Wearable MessageClient paths.
+object MessagePaths {
+    // Mobile -> Watch: request the watch to report its manufacturer.
+    const val REQUEST_MANUFACTURER = "/request-manufacturer"
+    // Watch -> Mobile: reply carrying the watch manufacturer string.
+    const val WATCH_MANUFACTURER = "/watch-manufacturer"
+}
+

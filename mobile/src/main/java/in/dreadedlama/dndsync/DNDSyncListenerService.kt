@@ -6,7 +6,9 @@ import android.util.Log
 import androidx.preference.PreferenceManager
 import com.google.android.gms.wearable.MessageEvent
 import com.google.android.gms.wearable.WearableListenerService
+import `in`.dreadedlama.dndsync.shared.MessagePaths
 import `in`.dreadedlama.dndsync.shared.PreferenceKeys
+import `in`.dreadedlama.dndsync.shared.StringPreferenceKeys
 import `in`.dreadedlama.dndsync.shared.WearSignal
 import org.apache.commons.lang3.SerializationUtils
 import androidx.core.net.toUri
@@ -21,6 +23,20 @@ class DNDSyncListenerService : WearableListenerService() {
                 addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
             }
             startActivity(intent)
+        } else if (messageEvent.path.equals(MessagePaths.WATCH_MANUFACTURER, ignoreCase = true)) {
+            val prefs = PreferenceManager.getDefaultSharedPreferences(this)
+
+            // Write once: only store the manufacturer if it has not been set yet (immutable).
+            val existing = prefs.getString(StringPreferenceKeys.WATCH_MANUFACTURER, "") ?: ""
+            if (existing.isEmpty()) {
+                val manufacturer = String(messageEvent.data, Charsets.UTF_8)
+                if (manufacturer.isNotEmpty()) {
+                    prefs.edit().putString(StringPreferenceKeys.WATCH_MANUFACTURER, manufacturer).apply()
+                    Log.d(TAG, "Stored watch manufacturer: $manufacturer")
+                }
+            } else {
+                Log.d(TAG, "Watch manufacturer already set to $existing, ignoring")
+            }
         } else if (messageEvent.path.equals(DND_SYNC_MESSAGE_PATH, ignoreCase = true)) {
             val prefs = PreferenceManager.getDefaultSharedPreferences(this)
 
