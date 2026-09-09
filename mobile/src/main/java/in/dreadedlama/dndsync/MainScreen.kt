@@ -54,11 +54,13 @@ fun MainScreen(context: Context) {
     val viewModel = viewModel<MainViewModel>()
     val dndAsBedtime by viewModel.dndAsBedtime.collectAsState()
     val bedtimeSync by viewModel.bedtimeSync.collectAsState()
+    val bedtimeNoDnd by viewModel.bedtimeNoDnd.collectAsState()
     val powerSaveEnabled by viewModel.powerSaveEnabled.collectAsState()
     val dndPermissionGranted by viewModel.dndPermissionGranted.collectAsState()
     val notificationState by viewModel.notificationState.collectAsState()
     val dndSync by viewModel.dndSync.collectAsState()
     val connectivityState by viewModel.connectivityState.collectAsState()
+    val watchManufacturer by viewModel.watchManufacturer.collectAsState()
     val permissionsGranted = dndPermissionGranted && notificationState
     var isDialogOpen by remember { mutableStateOf(false) }
 
@@ -188,6 +190,20 @@ fun MainScreen(context: Context) {
                         enabled = permissionsGranted
                     )
 
+                    // Bedtime only (No DND) Switch
+                    item(
+                        leadingText = R.string.bedtime_no_dnd_title,
+                        supportingText = R.string.bedtime_no_dnd_desc,
+                        icon = {
+                            Icon(painterResource(R.drawable.bedtime), contentDescription = "Bedtime only")
+                        },
+                        checked = bedtimeNoDnd,
+                        onCheckedChange = {
+                            viewModel.setBedtimeNoDnd(it)
+                        },
+                        enabled = bedtimeSync && permissionsGranted
+                    )
+
                     // Power Save Switch
                     item(
                         leadingText = R.string.enable_power_saving_title,
@@ -242,6 +258,7 @@ fun MainScreen(context: Context) {
 
                 var loading by remember { mutableStateOf(false) }
                 val coroutineScope = rememberCoroutineScope()
+                val manufacturerUnknown = stringResource(R.string.watch_manufacturer_unknown)
 
                 // DND Permission Setting
                 ConfigurationGroup(R.string.permission_header){
@@ -284,6 +301,20 @@ fun MainScreen(context: Context) {
                             }
                         }
                     )
+
+                    // Watch Manufacturer (fetched once from the watch, then immutable)
+                    val manufacturerDisplay = watchManufacturer.ifEmpty { manufacturerUnknown }
+                        .replaceFirstChar { if (it.isLowerCase()) it.titlecase() else it.toString() }
+                    valueItem(
+                        leadingText = R.string.watch_manufacturer_title,
+                        value = manufacturerDisplay,
+                        icon = {
+                            Icon(
+                                painterResource(R.drawable.watch),
+                                contentDescription = "Watch Manufacturer"
+                            )
+                        }
+                    )
                 }
             }
         }
@@ -315,8 +346,37 @@ class ConfigurationGroupScopeImpl(
     ) {
         items.add { index, total ->
             ConfigurationItem(
-                checked, onCheckedChange, leadingText,
-                supportingText, icon, enabled, index, total
+                checked = checked,
+                onCheckedChange = onCheckedChange,
+                leadingText = leadingText,
+                supportingText = supportingText,
+                icon = icon,
+                enabled = enabled,
+                index = index,
+                total = total
+            )
+        }
+    }
+
+    /**
+     * Read-only informational item that displays a dynamic [value] instead of a switch.
+     */
+    fun valueItem(
+        leadingText: Int,
+        value: String,
+        icon: @Composable (() -> Unit)? = null,
+    ) {
+        items.add { index, total ->
+            ConfigurationItem(
+                checked = null,
+                onCheckedChange = null,
+                leadingText = leadingText,
+                supportingText = null,
+                supportingTextValue = value,
+                icon = icon,
+                enabled = false,
+                index = index,
+                total = total
             )
         }
     }
@@ -325,9 +385,10 @@ class ConfigurationGroupScopeImpl(
 @Composable
 fun ConfigurationItem(
     checked: Boolean? = null,
-    onCheckedChange: (Boolean) -> Unit,
+    onCheckedChange: ((Boolean) -> Unit)? = null,
     leadingText: Int,
     supportingText: Int? = null,
+    supportingTextValue: String? = null,
     icon: @Composable (() -> Unit)? = null,
     enabled: Boolean = true,
     index: Int = 0,
@@ -343,10 +404,12 @@ fun ConfigurationItem(
     )
 
     val interactionSource = remember { MutableInteractionSource() }
-    val modifier = Modifier
+    var modifier = Modifier
         .padding(vertical = 2.dp, horizontal = 12.dp)
         .clip(clip)
-        .clickable(
+
+    if (onCheckedChange != null) {
+        modifier = modifier.clickable(
             enabled = enabled,
             onClick = {
                 onCheckedChange(checked != true)
@@ -354,6 +417,7 @@ fun ConfigurationItem(
             interactionSource = interactionSource,
             indication = ripple()
         )
+    }
 
     ListItem(
         colors = ListItemDefaults.colors(
@@ -361,12 +425,14 @@ fun ConfigurationItem(
         ),
         headlineContent = { Text(stringResource(leadingText)) },
         supportingContent = {
-            if (supportingText != null) {
+            if (supportingTextValue != null) {
+                Text(supportingTextValue)
+            } else if (supportingText != null) {
                 Text(stringResource(supportingText))
             }
         },
         trailingContent = {
-            if (checked != null) {
+            if (checked != null && onCheckedChange != null) {
                 Switch(
                     checked = checked,
                     onCheckedChange = onCheckedChange,

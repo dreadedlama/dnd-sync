@@ -13,6 +13,9 @@
     <string name="sync_bedtime_title">Sync Bedtime mode to watch</string>
     <string name="sync_bedtime_desc">Enable Bedtime mode on the watch whenever it is enabled on the phone</string>
 
+    <string name="bedtime_no_dnd_title">Enable only Bedtime mode on watch (No DND)</string>
+    <string name="bedtime_no_dnd_desc">When Bedtime mode is synced, only enable Bedtime mode on the watch and do not change the watch\'s DND state</string>
+
     <string name="sync_dnd_as_bedtime_title">Enable Bedtime mode on DND sync</string>
     <string name="sync_dnd_as_bedtime_desc">If enabled, DND changes on the phone will enable/disable Bedtime mode on the watch</string>
 
@@ -41,4 +44,8 @@
     <string name="connectivity_state_title">Connectivity State</string>
     <string name="connectivity_state_connected">Watch Connected</string>
     <string name="connectivity_state_disconnected">Watch Disconnected</string>
+
+    <!-- Watch Manufacturer -->
+    <string name="watch_manufacturer_title">Watch Manufacturer</string>
+    <string name="watch_manufacturer_unknown">Not fetched yet</string>
 </resources>

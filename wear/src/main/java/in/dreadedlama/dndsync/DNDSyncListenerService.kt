@@ -7,9 +7,14 @@ import android.os.*
 import android.provider.Settings
 import android.util.Log
 import androidx.core.content.getSystemService
+import androidx.preference.PreferenceManager
+import com.google.android.gms.tasks.Tasks
 import com.google.android.gms.wearable.MessageEvent
+import com.google.android.gms.wearable.Wearable
 import com.google.android.gms.wearable.WearableListenerService
+import `in`.dreadedlama.dndsync.shared.MessagePaths
 import `in`.dreadedlama.dndsync.shared.PhoneSignal
+import `in`.dreadedlama.dndsync.shared.StringPreferenceKeys
 import org.apache.commons.lang3.SerializationUtils
 
 
@@ -21,6 +26,12 @@ class DNDSyncListenerService : WearableListenerService() {
     private val samsungBedtimeLauncher = Runnable { launchSamsungBedtimeUIWithRetry() }
 
     override fun onMessageReceived(messageEvent: MessageEvent) {
+        if (messageEvent.getPath().equals(MessagePaths.REQUEST_MANUFACTURER, ignoreCase = true)) {
+            Log.d(TAG, "received path: ${MessagePaths.REQUEST_MANUFACTURER}")
+            handleManufacturerRequest(messageEvent.sourceNodeId)
+            return
+        }
+
         if (messageEvent.getPath().equals(DND_SYNC_MESSAGE_PATH, ignoreCase = true)) {
             Log.d(TAG, "received path: $DND_SYNC_MESSAGE_PATH")
 
@@ -72,8 +83,14 @@ class DNDSyncListenerService : WearableListenerService() {
                 // activating/disabling bedtime also activates/disables dnd, just like
                 // when activating bedtime manually from the watch.
                 // dndState = 2 means it's activated, dndState = 1 means it's disabled
-                val dndState = if (phoneSignal.bedtimeState == 1) 2 else 1
-                changeDndSetting(mNotificationManager, dndState)
+                // If the "Bedtime only (no DND)" preference is enabled, we skip changing
+                // the DND state and only toggle bedtime mode for more granular control.
+                if (!phoneSignal.bedtimeNoDndPref) {
+                    val dndState = if (phoneSignal.bedtimeState == 1) 2 else 1
+                    changeDndSetting(mNotificationManager, dndState)
+                } else {
+                    Log.d(TAG, "bedtimeNoDnd enabled: skipping DND change for bedtime sync")
+                }
 
                 val bedtimeModeSuccess = changeBedtimeSetting(phoneSignal.bedtimeState!!)
                 if (bedtimeModeSuccess) {
@@ -99,6 +116,37 @@ class DNDSyncListenerService : WearableListenerService() {
         } else {
             super.onMessageReceived(messageEvent)
         }
+    }
+
+    /**
+     * Reads the watch manufacturer, stores it in preferences once (if not already set), and
+     * replies to the requesting phone node with the manufacturer string.
+     */
+    private fun handleManufacturerRequest(sourceNodeId: String) {
+        val prefs = PreferenceManager.getDefaultSharedPreferences(this)
+        var storedManufacturer = prefs.getString(StringPreferenceKeys.WATCH_MANUFACTURER, "") ?: ""
+
+        if (storedManufacturer.isEmpty()) {
+            // Only fetch and persist once.
+            storedManufacturer = Build.MANUFACTURER ?: ""
+            if (storedManufacturer.isNotEmpty()) {
+                prefs.edit().putString(StringPreferenceKeys.WATCH_MANUFACTURER, storedManufacturer).apply()
+                Log.d(TAG, "Stored watch manufacturer: $storedManufacturer")
+            }
+        }
+
+        val data = storedManufacturer.toByteArray(Charsets.UTF_8)
+        Thread {
+            try {
+                Tasks.await(
+                    Wearable.getMessageClient(this)
+                        .sendMessage(sourceNodeId, MessagePaths.WATCH_MANUFACTURER, data)
+                )
+                Log.d(TAG, "Sent manufacturer to $sourceNodeId")
+            } catch (e: Exception) {
+                Log.e(TAG, "Failed to send manufacturer", e)
+            }
+        }.start()
     }
 
     private fun changeDndSetting(mNotificationManager: NotificationManager, newSetting: Int) {

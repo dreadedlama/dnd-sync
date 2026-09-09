@@ -26,6 +26,14 @@
                 app:summary="@string/sync_bedtime_desc" />
 
         <SwitchPreferenceCompat
+                app:dependency="bedtime_sync_key"
+                app:key="bedtime_no_dnd_key"
+                app:iconSpaceReserved="false"
+                app:defaultValue="false"
+                app:title="@string/bedtime_no_dnd_title"
+                app:summary="@string/bedtime_no_dnd_desc" />
+
+        <SwitchPreferenceCompat
                 app:key="power_save_key"
                 app:iconSpaceReserved="false"
                 app:enabled="false"

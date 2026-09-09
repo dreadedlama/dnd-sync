@@ -14,4 +14,12 @@ class PreferencesHelper(context: Context) {
     fun setValue(key: PreferenceKeys, value: Boolean) {
         prefs.edit().putBoolean(key.key, value).apply()
     }
+
+    fun getString(key: String, defaultValue: String = ""): String {
+        return prefs.getString(key, defaultValue) ?: defaultValue
+    }
+
+    fun setString(key: String, value: String) {
+        prefs.edit().putString(key, value).apply()
+    }
 }
