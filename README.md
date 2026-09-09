@@ -35,7 +35,7 @@ I have since incorporated changes from both Silleellie's and Turtlepaw's forks i
 ### Phone
 
 <p float="left">
-  <img src="/images/mobile.png" width="300" />
+  <img src="/images/mobile.jpg" width="250" />
 </p>
 
 1. Install the app `mobile-release-signed.apk` on the phone via *adb*
