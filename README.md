@@ -26,7 +26,7 @@ I have since incorporated changes from both Silleellie's and Turtlepaw's forks i
 
 ***Manual installation is required. The use of ADB is required. (*Don't worry, it's very easy!*)***
 
-* Download the latest `.apk` files from the ['Releases' section](https://github.com/dreadedlama/dnd-sync/releases) (`mobile-release.apk` and `wear-release.apk`)
+* Download the latest `.apk` files from the ['Releases' section](https://github.com/dreadedlama/dnd-sync/releases) (`mobile-release-signed.apk` and `wear-release-signed.apk`)
 * Be sure to enable notifications for Bedtime mode of the Digital Wellbeing app on your phone (*They are by default*)
   * This app knows that bedtime mode is activated when its notification pops up (since there's no public API for the *Digital Wellbeing* app)
 * If you don't have ADB, you can download a lightweight version from the [github release page](https://github.com/K3V1991/ADB-and-FastbootPlusPlus/releases) of *ADB and Fastboot++*
@@ -38,9 +38,9 @@ I have since incorporated changes from both Silleellie's and Turtlepaw's forks i
   <img src="/images/mobile.png" width="300" />
 </p>
 
-1. Install the app `mobile-release.apk` on the phone via *adb*
+1. Install the app `mobile-release-signed.apk` on the phone via *adb*
   * Enable `USB Debugging` in the *Developer Options* of your phone and the connect it to the PC
-  * Run `adb install mobile-release.ap`
+  * Run `adb install mobile-release-signed.ap`
 2. Disconnect the phone from the PC
   * Disable `USB Debugging` from the *Developer Options* of your phone
 3. Open the app and grant the permission for *DND Access* and *Bedtime Access* by clicking on the menu entry *DND-Bedtime Permission*. This will open the permission screen.
@@ -69,8 +69,8 @@ Note: This is only tested on my Galaxy Watch 4 and it might not work on other de
   * Pair the watch with `adb pair 192.168.0.100:5555 123456` (***insert your value!***)
   * Check that now your PC is listed under `Paired devices` and there's a text under it saying `Currently connected`
     * If not, perform `adb connect 192.168.0.100:6666` with the IP address and port listed in the `Debug over WIFI` screen
-2. Install the app `wear-release.apk` on the watch
-  * Run `adb install wear-release.apk`
+2. Install the app `wear-release-signed.apk` on the watch
+  * Run `adb install wear-release-signed.apk`
 3. Grant permission for **DND access** (*This allows the app to listen to DND changes and to change the DND setting*)
   * Run `adb shell cmd notification allow_listener in.dreadedlama.dndsync/in.dreadedlama.dndsync.DNDNotificationService`
 4. Grant permission for **Secure Setting access** (*This allows the app to change BedTime mode setting on the watch*)
