@@ -5,6 +5,7 @@ import android.app.NotificationManager
 import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
+import android.os.Build
 import android.provider.Settings
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
@@ -55,6 +56,13 @@ class MainViewModel(val app: Application) : AndroidViewModel(app) {
     private val _watchVibrate = MutableStateFlow(false)
     val watchVibrate: StateFlow<Boolean> = _watchVibrate
 
+    // Samsung Mode Sync State
+    private val _samsungModeSync = MutableStateFlow(false)
+    val samsungModeSync: StateFlow<Boolean> = _samsungModeSync
+
+    // Only meaningful on Samsung phones (mode_id system setting)
+    val isSamsungDevice: Boolean = Build.MANUFACTURER.equals("samsung", ignoreCase = true)
+
     // Connectivity state
     private val _connectivityState = MutableStateFlow(false)
     val connectivityState: StateFlow<Boolean> = _connectivityState
@@ -93,6 +101,7 @@ class MainViewModel(val app: Application) : AndroidViewModel(app) {
         _dndSync.value = preferencesHelper.getValue(PreferenceKeys.DndSync)
         _watchSync.value = preferencesHelper.getValue(PreferenceKeys.WatchDndSync)
         _watchVibrate.value = preferencesHelper.getValue(PreferenceKeys.WatchVibrate)
+        _samsungModeSync.value = preferencesHelper.getValue(PreferenceKeys.SamsungModeSync)
 
         _dndPermissionGranted.value = checkDNDPermission()
         _notificationState.value = isNotificationListenerEnabled(app)
@@ -120,18 +129,10 @@ class MainViewModel(val app: Application) : AndroidViewModel(app) {
         }
     }
 
-    /**
-     * Reloads the watch manufacturer from preferences. The manufacturer is written once by
-     * [DNDSyncListenerService] and treated as immutable afterwards.
-     */
     fun refreshWatchManufacturer() {
         _watchManufacturer.value = preferencesHelper.getString(StringPreferenceKeys.WATCH_MANUFACTURER)
     }
 
-    /**
-     * Requests the watch to report its manufacturer, but only if it has not been fetched yet.
-     * This keeps the fetch a one-time operation rather than a continuous sync.
-     */
     fun requestWatchManufacturer() {
         if (preferencesHelper.getString(StringPreferenceKeys.WATCH_MANUFACTURER).isNotEmpty()) {
             // Already known and immutable, nothing to do.
@@ -154,7 +155,7 @@ class MainViewModel(val app: Application) : AndroidViewModel(app) {
                     ).await()
                 }
             } catch (e: Exception) {
-                // Best-effort request; will be retried next time connectivity is refreshed.
+                // Will be retried next time connectivity is refreshed.
             }
         }
     }
@@ -208,6 +209,11 @@ class MainViewModel(val app: Application) : AndroidViewModel(app) {
     fun setWatchVibrate(value: Boolean) {
         _watchVibrate.value = value
         preferencesHelper.setValue(PreferenceKeys.WatchVibrate, value)
+    }
+
+    fun setSamsungModeSync(value: Boolean) {
+        _samsungModeSync.value = value
+        preferencesHelper.setValue(PreferenceKeys.SamsungModeSync, value)
     }
 
     fun requestDNDPermission() {

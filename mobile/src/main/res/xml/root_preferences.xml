@@ -41,6 +41,14 @@
                 app:summary="@string/enable_power_saving_desc"
                 app:defaultValue="false"/>
 
+        <SwitchPreferenceCompat
+                app:key="samsung_mode_sync_key"
+                app:iconSpaceReserved="false"
+                app:defaultValue="false"
+                app:title="@string/sync_samsung_mode_title"
+                app:summary="@string/sync_samsung_mode_desc" />
+
+
     </PreferenceCategory>
 
     <PreferenceCategory app:title="@string/watch_sync_header"

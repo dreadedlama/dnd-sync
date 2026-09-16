@@ -3,7 +3,7 @@ package `in`.dreadedlama.dndsync.shared
 import android.content.SharedPreferences
 import java.io.Serializable
 
-class PhoneSignal(dndState: Int, prefs: SharedPreferences) : Serializable {
+class PhoneSignal : Serializable {
     // dndState and bedtimeState will be null if the signal to sent is not related
     // to those two states
     var dndState: Int? = null
@@ -12,7 +12,15 @@ class PhoneSignal(dndState: Int, prefs: SharedPreferences) : Serializable {
     var vibratePref: Boolean = false
     var bedtimeNoDndPref: Boolean = false
 
-    init {
+    var samsungMode: Int? = null
+
+    constructor(prefs: SharedPreferences, samsungMode: Int) {
+        this.powersavePref = prefs.getBoolean(PreferenceKeys.PowerSave.key, PreferenceKeys.PowerSave.defaultValue)
+        this.vibratePref = prefs.getBoolean(PreferenceKeys.WatchVibrate.key, PreferenceKeys.WatchVibrate.defaultValue)
+        this.samsungMode = samsungMode
+    }
+
+    constructor(dndState: Int, prefs: SharedPreferences) {
         val dndAsBedtime = prefs.getBoolean(PreferenceKeys.DndAsBedtime.key, PreferenceKeys.DndAsBedtime.defaultValue)
         this.powersavePref = prefs.getBoolean(PreferenceKeys.PowerSave.key, PreferenceKeys.PowerSave.defaultValue)
         this.vibratePref = prefs.getBoolean(PreferenceKeys.WatchVibrate.key, PreferenceKeys.WatchVibrate.defaultValue)
@@ -45,5 +53,11 @@ class PhoneSignal(dndState: Int, prefs: SharedPreferences) : Serializable {
 
             this.bedtimeState = if (dndState == 5) 1 else 0
         }
+    }
+
+    companion object {
+        const val SAMSUNG_MODE_NORMAL: Int = 0
+        const val SAMSUNG_MODE_SLEEP: Int = 100
+//        const val SAMSUNG_MODE_THEATRE: Int = 105
     }
 }

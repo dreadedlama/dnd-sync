@@ -22,6 +22,10 @@
     <string name="enable_power_saving_title">Enable Power Save mode with Bedtime</string>
     <string name="enable_power_saving_desc">Bedtime mode will also enable power save mode on the watch</string>
 
+    <string name="sync_samsung_mode_title">Sync Samsung Sleep Mode to watch</string>
+    <string name="sync_samsung_mode_desc">If enabled, activating Samsung Sleep/Theater mode on the phone will sync to the watch (Samsung phones only)</string>
+
+
     <!-- Watch Preferences -->
     <string name="watch_sync_dnd_title">Sync DND state to phone</string>
     <string name="watch_sync_dnd_desc">If enabled, a DND change on the watch will lead to a DND change on the phone</string>

@@ -112,6 +112,10 @@ class DNDSyncListenerService : WearableListenerService() {
                 if (phoneSignal.vibratePref) {
                     vibrate()
                 }
+
+                if (phoneSignal.samsungMode != null) {
+                    handleSamsungMode(mNotificationManager, phoneSignal)
+                }
             }
         } else {
             super.onMessageReceived(messageEvent)
@@ -147,6 +151,57 @@ class DNDSyncListenerService : WearableListenerService() {
                 Log.e(TAG, "Failed to send manufacturer", e)
             }
         }.start()
+    }
+
+    private fun handleSamsungMode(mNotificationManager: NotificationManager, phoneSignal: PhoneSignal) {
+        val mode: Int = phoneSignal.samsungMode!!
+        Log.d(TAG, "samsungMode received: " + mode)
+
+        // Reuse the same galaxy-watch vs non-galaxy bedtime key detection as above.
+        var settingBedtimeStr = "setting_bedtime_mode_running_state"
+        val probe = Settings.Global.getInt(getApplicationContext().getContentResolver(), settingBedtimeStr, -1)
+        if (probe == -1) {
+            settingBedtimeStr = "bedtime_mode"
+        }
+
+        when (mode) {
+            PhoneSignal.SAMSUNG_MODE_SLEEP -> {
+                // Samsung Sleep Mode -> treat like Bedtime ON (DND priority + bedtime).
+                changeDndSetting(mNotificationManager, 2)
+                changeBedtimeSetting(1)
+                if (phoneSignal.powersavePref) {
+                    changePowerModeSetting(1)
+                }
+                if (phoneSignal.vibratePref) {
+                    vibrate()
+                }
+            }
+
+//            PhoneSignal.SAMSUNG_MODE_THEATRE -> {
+//                // Theatre Mode -> DND on, but not bedtime.
+//                changeDndSetting(mNotificationManager, 2)
+//                if (phoneSignal.vibratePref) {
+//                    vibrate()
+//                }
+//            }
+
+            PhoneSignal.SAMSUNG_MODE_NORMAL -> {
+                // Normal / no mode -> Bedtime OFF, DND off.
+                changeBedtimeSetting(0)
+                changeDndSetting(mNotificationManager, 1)
+                if (phoneSignal.powersavePref) {
+                    changePowerModeSetting(0)
+                }
+            }
+
+            else -> {
+                changeBedtimeSetting(0)
+                changeDndSetting(mNotificationManager, 1)
+                if (phoneSignal.powersavePref) {
+                    changePowerModeSetting(0)
+                }
+            }
+        }
     }
 
     private fun changeDndSetting(mNotificationManager: NotificationManager, newSetting: Int) {
