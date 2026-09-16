@@ -8,6 +8,7 @@ enum class PreferenceKeys(val key: String, val defaultValue: Boolean = true){
     PowerSave("power_save_key", false),
     DndSync("dnd_sync_key", true),
     WatchVibrate("watch_vibrate_key", false),
+    SamsungModeSync("samsung_mode_sync_key", false),
 }
 
 object StringPreferenceKeys {
