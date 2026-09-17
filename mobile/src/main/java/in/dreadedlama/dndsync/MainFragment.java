@@ -1,4 +1,4 @@
-package in.dreadedlama.dndsync;
+﻿package in.dreadedlama.dndsync;
 
 import android.app.NotificationManager;
 import android.content.Context;
@@ -25,7 +25,6 @@ public class MainFragment extends PreferenceFragmentCompat {
         SwitchPreferenceCompat dndAsBedtime = findPreference("dnd_as_bedtime_key");
         SwitchPreferenceCompat bedtimeSync = findPreference("bedtime_sync_key");
         SwitchPreferenceCompat powerSave = findPreference("power_save_key");
-        SwitchPreferenceCompat samsungModeSyncKey = findPreference("samsung_mode_sync_key");
 
 
         assert(dndAsBedtime != null);
@@ -37,9 +36,6 @@ public class MainFragment extends PreferenceFragmentCompat {
             powerSave.setEnabled(true);
         }
 
-        if (samsungModeSyncKey != null) {
-            samsungModeSyncKey.setVisible(android.os.Build.MANUFACTURER.equalsIgnoreCase("samsung"));
-        }
 
         dndAsBedtime.setOnPreferenceChangeListener((preference, newValue) -> {
 

@@ -1,4 +1,4 @@
-package `in`.dreadedlama.dndsync
+﻿package `in`.dreadedlama.dndsync
 
 import android.content.Context
 import android.content.Intent
@@ -61,7 +61,6 @@ fun MainScreen(context: Context) {
     val dndSync by viewModel.dndSync.collectAsState()
     val connectivityState by viewModel.connectivityState.collectAsState()
     val watchManufacturer by viewModel.watchManufacturer.collectAsState()
-    val samsungModeSync by viewModel.samsungModeSync.collectAsState()
     val permissionsGranted = dndPermissionGranted && notificationState
     var isDialogOpen by remember { mutableStateOf(false) }
 
@@ -219,22 +218,6 @@ fun MainScreen(context: Context) {
                         enabled = bedtimeSync && permissionsGranted
                     )
 
-                    // Samsung Sleep mode sync (Samsung phones only)
-                    if (viewModel.isSamsungDevice) {
-                        item(
-                            leadingText = R.string.sync_samsung_mode_title,
-                            supportingText = R.string.sync_samsung_mode_desc,
-                            icon = {
-                                Icon(
-                                    painterResource(R.drawable.bedtime),
-                                    contentDescription = "Samsung Mode"
-                                )
-                            },
-                            checked = samsungModeSync,
-                            onCheckedChange = { viewModel.setSamsungModeSync(it) },
-                            enabled = permissionsGranted
-                        )
-                    }
                 }
 
                 val watchSync = viewModel.watchSync.collectAsState().value
