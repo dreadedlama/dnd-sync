@@ -4,8 +4,9 @@
   <component name="GradleSettings">
     <option name="linkedExternalProjectsSettings">
       <GradleProjectSettings>
+        <option name="distributionType" value="LOCAL" />
         <option name="externalProjectPath" value="$PROJECT_DIR$" />
-        <option name="gradleJvm" value="corretto-17" />
+        <option name="gradleJvm" value="temurin-17" />
         <option name="modules">
           <set>
             <option value="$PROJECT_DIR$" />
@@ -14,6 +15,7 @@
             <option value="$PROJECT_DIR$/wear" />
           </set>
         </option>
+        <option name="myGradleHome" value="C:\Gradle\gradle-8.11.1" />
       </GradleProjectSettings>
     </option>
   </component>

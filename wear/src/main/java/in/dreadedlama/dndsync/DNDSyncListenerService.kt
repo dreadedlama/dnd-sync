@@ -20,8 +20,10 @@ import org.apache.commons.lang3.SerializationUtils
 
 class DNDSyncListenerService : WearableListenerService() {
     val SAMSUNG: String = "Samsung"
+    val GOOGLE: String = "Google"
     val manufacturer: String? = Build.MANUFACTURER
     val isSamsung = manufacturer.equals(SAMSUNG, ignoreCase = true)
+    val isGoogle = manufacturer.equals(GOOGLE, ignoreCase = true)
     private val handler = Handler(Looper.getMainLooper())
     private val samsungBedtimeLauncher = Runnable { launchSamsungBedtimeUIWithRetry() }
 
@@ -50,49 +52,31 @@ class DNDSyncListenerService : WearableListenerService() {
                 Log.d(TAG, "Current DND state is suspicious, should be in range [0,4]")
             }
 
+            //For DND state, we only change it if the phone's DND state is different from the current DND state on the watch.
             if (phoneSignal.dndState != null && phoneSignal.dndState == currentDndState) {
-                // avoid issue that happens due to redundant signal propagation:
-                // if dnd_as_bedtime and watch_sync_dnd are activated, when dnd is activated
-                // from the watch, dnd is activated to the phone and then bedtime is activated
-                // back on the watch. This early return avoids that.
                 return
             } else if (phoneSignal.dndState != null) {
-                Log.d(
-                    TAG,
-                    "dndStatePhone != currentDndState: " + phoneSignal.dndState + " != " + currentDndState
-                )
-
+                Log.d(TAG, "dndStatePhone != currentDndState: " + phoneSignal.dndState + " != " + currentDndState)
                 changeDndSetting(mNotificationManager, phoneSignal.dndState!!)
-
                 Log.d(TAG, "vibrate: " + phoneSignal.vibratePref)
                 if (phoneSignal.vibratePref) {
                     vibrate()
                 }
             }
 
-            val currentBedtimeState = Settings.Global.getInt(
-                applicationContext.contentResolver, getBedtimeSettingName(), -1
-            )
+            val currentBedtimeState = Settings.Global.getInt(applicationContext.contentResolver, getBedtimeSettingName(), -1)
 
             if (phoneSignal.bedtimeState != null && phoneSignal.bedtimeState != currentBedtimeState) {
-                Log.d(
-                    TAG,
-                    "bedtimeStatePhone != currentBedtimeState: " + phoneSignal.bedtimeState + " != " + currentBedtimeState
-                )
+                Log.d(TAG, "bedtimeStatePhone != currentBedtimeState: " + phoneSignal.bedtimeState + " != " + currentBedtimeState)
 
-                // activating/disabling bedtime also activates/disables dnd, just like
-                // when activating bedtime manually from the watch.
-                // dndState = 2 means it's activated, dndState = 1 means it's disabled
-                // If the "Bedtime only (no DND)" preference is enabled, we skip changing
-                // the DND state and only toggle bedtime mode for more granular control.
-                if (!phoneSignal.bedtimeNoDndPref) {
+                if (!isGoogle) {
                     val dndState = if (phoneSignal.bedtimeState == 1) 2 else 1
                     changeDndSetting(mNotificationManager, dndState)
                 } else {
-                    Log.d(TAG, "bedtimeNoDnd enabled: skipping DND change for bedtime sync")
+                    Log.d(TAG, "Watch manufacturer is Google: skipping DND change for bedtime sync")
                 }
 
-                val bedtimeModeSuccess = changeBedtimeSetting(phoneSignal.bedtimeState!!)
+                val bedtimeModeSuccess = changeBedtimeSetting(phoneSignal)
                 if (bedtimeModeSuccess) {
                     Log.d(TAG, "Bedtime mode value toggled")
                 } else {
@@ -113,9 +97,9 @@ class DNDSyncListenerService : WearableListenerService() {
                     vibrate()
                 }
 
-                if (phoneSignal.samsungMode != null) {
-                    handleSamsungMode(mNotificationManager, phoneSignal)
-                }
+//                if (phoneSignal.samsungMode != null) {
+//                    handleSamsungMode(mNotificationManager, phoneSignal)
+//                }
             }
         } else {
             super.onMessageReceived(messageEvent)
@@ -153,56 +137,56 @@ class DNDSyncListenerService : WearableListenerService() {
         }.start()
     }
 
-    private fun handleSamsungMode(mNotificationManager: NotificationManager, phoneSignal: PhoneSignal) {
-        val mode: Int = phoneSignal.samsungMode!!
-        Log.d(TAG, "samsungMode received: " + mode)
-
-        // Reuse the same galaxy-watch vs non-galaxy bedtime key detection as above.
-        var settingBedtimeStr = "setting_bedtime_mode_running_state"
-        val probe = Settings.Global.getInt(getApplicationContext().getContentResolver(), settingBedtimeStr, -1)
-        if (probe == -1) {
-            settingBedtimeStr = "bedtime_mode"
-        }
-
-        when (mode) {
-            PhoneSignal.SAMSUNG_MODE_SLEEP -> {
-                // Samsung Sleep Mode -> treat like Bedtime ON (DND priority + bedtime).
-                changeDndSetting(mNotificationManager, 2)
-                changeBedtimeSetting(1)
-                if (phoneSignal.powersavePref) {
-                    changePowerModeSetting(1)
-                }
-                if (phoneSignal.vibratePref) {
-                    vibrate()
-                }
-            }
-
-//            PhoneSignal.SAMSUNG_MODE_THEATRE -> {
-//                // Theatre Mode -> DND on, but not bedtime.
+//    private fun handleSamsungMode(mNotificationManager: NotificationManager, phoneSignal: PhoneSignal) {
+//        val mode: Int = phoneSignal.samsungMode!!
+//        Log.d(TAG, "samsungMode received: " + mode)
+//
+//        // Reuse the same galaxy-watch vs non-galaxy bedtime key detection as above.
+//        var settingBedtimeStr = "setting_bedtime_mode_running_state"
+//        val probe = Settings.Global.getInt(getApplicationContext().getContentResolver(), settingBedtimeStr, -1)
+//        if (probe == -1) {
+//            settingBedtimeStr = "bedtime_mode"
+//        }
+//
+//        when (mode) {
+//            PhoneSignal.SAMSUNG_MODE_SLEEP -> {
+//                // Samsung Sleep Mode -> treat like Bedtime ON (DND priority + bedtime).
 //                changeDndSetting(mNotificationManager, 2)
+//                changeBedtimeSetting(1)
+//                if (phoneSignal.powersavePref) {
+//                    changePowerModeSetting(1)
+//                }
 //                if (phoneSignal.vibratePref) {
 //                    vibrate()
 //                }
 //            }
-
-            PhoneSignal.SAMSUNG_MODE_NORMAL -> {
-                // Normal / no mode -> Bedtime OFF, DND off.
-                changeBedtimeSetting(0)
-                changeDndSetting(mNotificationManager, 1)
-                if (phoneSignal.powersavePref) {
-                    changePowerModeSetting(0)
-                }
-            }
-
-            else -> {
-                changeBedtimeSetting(0)
-                changeDndSetting(mNotificationManager, 1)
-                if (phoneSignal.powersavePref) {
-                    changePowerModeSetting(0)
-                }
-            }
-        }
-    }
+//
+////            PhoneSignal.SAMSUNG_MODE_THEATRE -> {
+////                // Theatre Mode -> DND on, but not bedtime.
+////                changeDndSetting(mNotificationManager, 2)
+////                if (phoneSignal.vibratePref) {
+////                    vibrate()
+////                }
+////            }
+//
+//            PhoneSignal.SAMSUNG_MODE_NORMAL -> {
+//                // Normal / no mode -> Bedtime OFF, DND off.
+//                changeBedtimeSetting(0)
+//                changeDndSetting(mNotificationManager, 1)
+//                if (phoneSignal.powersavePref) {
+//                    changePowerModeSetting(0)
+//                }
+//            }
+//
+//            else -> {
+//                changeBedtimeSetting(0)
+//                changeDndSetting(mNotificationManager, 1)
+//                if (phoneSignal.powersavePref) {
+//                    changePowerModeSetting(0)
+//                }
+//            }
+//        }
+//    }
 
     private fun changeDndSetting(mNotificationManager: NotificationManager, newSetting: Int) {
         if (mNotificationManager.isNotificationPolicyAccessGranted) {
@@ -217,7 +201,18 @@ class DNDSyncListenerService : WearableListenerService() {
         return if (isSamsung) "setting_bedtime_mode_running_state" else "bedtime_mode"
     }
 
-    private fun changeBedtimeSetting(newSetting: Int): Boolean {
+    private fun changeBedtimeSetting(phoneSignal: PhoneSignal): Boolean {
+        var newSetting = phoneSignal.bedtimeState!!
+        if(phoneSignal.samsungMode != null) {
+            Log.d(TAG, "Samsung mode received: " + phoneSignal.samsungMode)
+            if(phoneSignal.samsungMode == PhoneSignal.SAMSUNG_MODE_SLEEP) {
+                Log.d(TAG, "Samsung Sleep Mode -> setting bedtime ON")
+                newSetting = 1
+            } else if(phoneSignal.samsungMode == PhoneSignal.SAMSUNG_MODE_NORMAL) {
+                Log.d(TAG, "Samsung Normal Mode -> setting bedtime OFF")
+                newSetting = 0
+            }
+        }
 
         val bedtimeModeSuccess = setGlobalSettingIfPresent(getBedtimeSettingName(), newSetting);
         val zenModeSuccess = setGlobalSettingIfPresent("zen_mode", newSetting);
@@ -228,7 +223,6 @@ class DNDSyncListenerService : WearableListenerService() {
             handler.removeCallbacks(samsungBedtimeLauncher);
             handler.postDelayed(samsungBedtimeLauncher, 1000);
         }
-
         return bedtimeModeSuccess && zenModeSuccess && nightDisplayActivated
     }
 
@@ -272,7 +266,6 @@ class DNDSyncListenerService : WearableListenerService() {
 
     /**
      * Changes the power mode setting.
-     *
      * **NOTE:** does not seem to work on non-samsung watches, like the Pixel Watch.
      */
     private fun changePowerModeSetting(newSetting: Int): Boolean {
@@ -284,8 +277,7 @@ class DNDSyncListenerService : WearableListenerService() {
         // screen timeout should be set to 10000 also, and ambient_tilt_to_wake should be set to 0
         // but previous variable states in those 2 cases must be stored and they do not seem to stick
         // and they are not so much important tbh (ambient tilt to wake is disabled anyways)
-        return lowPower && restrictedDevicePerformance
-                && lowPowerBackDataOff && smConnectivityDisable
+        return lowPower && restrictedDevicePerformance && lowPowerBackDataOff && smConnectivityDisable
     }
 
     private fun vibrate() {
