@@ -54,12 +54,14 @@ fun MainScreen(context: Context) {
     val viewModel = viewModel<MainViewModel>()
     val dndAsBedtime by viewModel.dndAsBedtime.collectAsState()
     val bedtimeSync by viewModel.bedtimeSync.collectAsState()
+    val bedtimeNoDnd by viewModel.bedtimeNoDnd.collectAsState()
     val powerSaveEnabled by viewModel.powerSaveEnabled.collectAsState()
     val dndPermissionGranted by viewModel.dndPermissionGranted.collectAsState()
     val notificationState by viewModel.notificationState.collectAsState()
     val dndSync by viewModel.dndSync.collectAsState()
     val connectivityState by viewModel.connectivityState.collectAsState()
     val watchManufacturer by viewModel.watchManufacturer.collectAsState()
+    val samsungModeSync by viewModel.samsungModeSync.collectAsState()
     val permissionsGranted = dndPermissionGranted && notificationState
     var isDialogOpen by remember { mutableStateOf(false) }
 
@@ -189,6 +191,20 @@ fun MainScreen(context: Context) {
                         enabled = permissionsGranted
                     )
 
+                    // Bedtime only (No DND) Switch
+                    item(
+                        leadingText = R.string.bedtime_no_dnd_title,
+                        supportingText = R.string.bedtime_no_dnd_desc,
+                        icon = {
+                            Icon(painterResource(R.drawable.bedtime), contentDescription = "Bedtime only")
+                        },
+                        checked = bedtimeNoDnd,
+                        onCheckedChange = {
+                            viewModel.setBedtimeNoDnd(it)
+                        },
+                        enabled = bedtimeSync && permissionsGranted
+                    )
+
                     // Power Save Switch
                     item(
                         leadingText = R.string.enable_power_saving_title,
@@ -203,6 +219,22 @@ fun MainScreen(context: Context) {
                         enabled = bedtimeSync && permissionsGranted
                     )
 
+                    // Samsung Sleep mode sync (Samsung phones only)
+                    if (viewModel.isSamsungDevice) {
+                        item(
+                            leadingText = R.string.sync_samsung_mode_title,
+                            supportingText = R.string.sync_samsung_mode_desc,
+                            icon = {
+                                Icon(
+                                    painterResource(R.drawable.bedtime),
+                                    contentDescription = "Samsung Mode"
+                                )
+                            },
+                            checked = samsungModeSync,
+                            onCheckedChange = { viewModel.setSamsungModeSync(it) },
+                            enabled = permissionsGranted
+                        )
+                    }
                 }
 
                 val watchSync = viewModel.watchSync.collectAsState().value
