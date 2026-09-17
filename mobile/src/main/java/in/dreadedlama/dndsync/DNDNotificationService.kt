@@ -66,15 +66,6 @@ class DNDNotificationService : NotificationListenerService() {
         lastModeId = modeId
 
         val prefs = PreferenceManager.getDefaultSharedPreferences(this)
-        val syncSamsungMode = prefs.getBoolean(
-            PreferenceKeys.SamsungModeSync.key,
-            PreferenceKeys.SamsungModeSync.defaultValue
-        )
-
-        if (!syncSamsungMode) {
-            Log.d(TAG, "SamsungModeSync disabled, not sending bedtime to watch")
-            return
-        }
 
         val interruptionFilter = when (modeId) {
             SamsungModeDetector.MODE_SLEEP -> {

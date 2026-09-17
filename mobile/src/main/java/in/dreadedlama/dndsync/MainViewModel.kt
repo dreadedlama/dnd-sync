@@ -31,9 +31,6 @@ class MainViewModel(val app: Application) : AndroidViewModel(app) {
     private val _bedtimeSync = MutableStateFlow(false)
     val bedtimeSync: StateFlow<Boolean> = _bedtimeSync
 
-    private val _bedtimeNoDnd = MutableStateFlow(false)
-    val bedtimeNoDnd: StateFlow<Boolean> = _bedtimeNoDnd
-
     private val _powerSaveEnabled = MutableStateFlow(false)
     val powerSaveEnabled: StateFlow<Boolean> = _powerSaveEnabled
 
@@ -55,10 +52,6 @@ class MainViewModel(val app: Application) : AndroidViewModel(app) {
     // Watch Vibrate State
     private val _watchVibrate = MutableStateFlow(false)
     val watchVibrate: StateFlow<Boolean> = _watchVibrate
-
-    // Samsung Mode Sync State
-    private val _samsungModeSync = MutableStateFlow(false)
-    val samsungModeSync: StateFlow<Boolean> = _samsungModeSync
 
     // Only meaningful on Samsung phones (mode_id system setting)
     val isSamsungDevice: Boolean = Build.MANUFACTURER.equals("samsung", ignoreCase = true)
@@ -96,12 +89,10 @@ class MainViewModel(val app: Application) : AndroidViewModel(app) {
     fun initiateStates() {
         _dndAsBedtime.value = preferencesHelper.getValue(PreferenceKeys.DndAsBedtime)
         _bedtimeSync.value = preferencesHelper.getValue(PreferenceKeys.BedtimeSync)
-        _bedtimeNoDnd.value = preferencesHelper.getValue(PreferenceKeys.BedtimeNoDnd)
         _powerSaveEnabled.value = preferencesHelper.getValue(PreferenceKeys.PowerSave)
         _dndSync.value = preferencesHelper.getValue(PreferenceKeys.DndSync)
         _watchSync.value = preferencesHelper.getValue(PreferenceKeys.WatchDndSync)
         _watchVibrate.value = preferencesHelper.getValue(PreferenceKeys.WatchVibrate)
-        _samsungModeSync.value = preferencesHelper.getValue(PreferenceKeys.SamsungModeSync)
 
         _dndPermissionGranted.value = checkDNDPermission()
         _notificationState.value = isNotificationListenerEnabled(app)
@@ -191,10 +182,6 @@ class MainViewModel(val app: Application) : AndroidViewModel(app) {
         preferencesHelper.setValue(PreferenceKeys.BedtimeSync, value)
     }
 
-    fun setBedtimeNoDnd(value: Boolean) {
-        _bedtimeNoDnd.value = value
-        preferencesHelper.setValue(PreferenceKeys.BedtimeNoDnd, value)
-    }
 
     fun setDndSync(value: Boolean) {
         _dndSync.value = value
@@ -209,11 +196,6 @@ class MainViewModel(val app: Application) : AndroidViewModel(app) {
     fun setWatchVibrate(value: Boolean) {
         _watchVibrate.value = value
         preferencesHelper.setValue(PreferenceKeys.WatchVibrate, value)
-    }
-
-    fun setSamsungModeSync(value: Boolean) {
-        _samsungModeSync.value = value
-        preferencesHelper.setValue(PreferenceKeys.SamsungModeSync, value)
     }
 
     fun requestDNDPermission() {
