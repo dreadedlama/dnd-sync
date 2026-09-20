@@ -4,7 +4,7 @@ plugins {
 }
 
 android {
-    namespace 'in.dreadedlama.dndsync.shared'
+    namespace 'in.dreadedlama.easysync.shared'
     compileSdk 35
 
     defaultConfig {

@@ -14,10 +14,10 @@ android {
         }
     }
     compileSdk 35
-    namespace "in.dreadedlama.dndsync"
+    namespace "in.dreadedlama.easysync"
 
     defaultConfig {
-        applicationId "in.dreadedlama.dndsync"
+        applicationId "in.dreadedlama.easysync"
         minSdk 26
         targetSdk 33
         versionCode 8

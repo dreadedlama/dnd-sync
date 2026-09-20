@@ -1,4 +1,4 @@
-package `in`.dreadedlama.dndsync
+package `in`.dreadedlama.easysync
 
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
@@ -8,7 +8,6 @@ import androidx.compose.ui.res.colorResource
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.wear.compose.material.Colors
 import androidx.wear.compose.material.MaterialTheme
-import `in`.dreadedlama.dndsync.MainScreen
 
 class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {

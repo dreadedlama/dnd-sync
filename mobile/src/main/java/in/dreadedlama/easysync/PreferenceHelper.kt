@@ -1,8 +1,8 @@
-package `in`.dreadedlama.dndsync
+package `in`.dreadedlama.easysync
 
 import android.content.Context
 import androidx.preference.PreferenceManager
-import `in`.dreadedlama.dndsync.shared.PreferenceKeys
+import `in`.dreadedlama.easysync.shared.PreferenceKeys
 
 class PreferencesHelper(context: Context) {
     private val prefs = PreferenceManager.getDefaultSharedPreferences(context);

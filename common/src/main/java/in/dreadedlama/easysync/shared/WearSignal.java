@@ -1,4 +1,4 @@
-package in.dreadedlama.dndsync.shared;
+package in.dreadedlama.easysync.shared;
 
 import java.io.Serializable;
 

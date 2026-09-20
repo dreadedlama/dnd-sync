@@ -1,4 +1,4 @@
-package in.dreadedlama.dndsync;
+package in.dreadedlama.easysync;
 
 import android.app.NotificationManager;
 import android.content.Context;

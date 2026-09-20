@@ -1,4 +1,4 @@
-package in.dreadedlama.dndsync;
+package in.dreadedlama.easysync;
 
 import org.junit.Test;
 

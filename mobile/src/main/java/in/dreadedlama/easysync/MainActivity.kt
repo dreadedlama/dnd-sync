@@ -1,4 +1,4 @@
-package `in`.dreadedlama.dndsync
+package `in`.dreadedlama.easysync
 
 import android.os.Bundle
 import androidx.activity.compose.setContent

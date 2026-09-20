@@ -1,4 +1,4 @@
-package `in`.dreadedlama.dndsync
+package `in`.dreadedlama.easysync
 
 import android.os.Build
 import androidx.compose.foundation.isSystemInDarkTheme
