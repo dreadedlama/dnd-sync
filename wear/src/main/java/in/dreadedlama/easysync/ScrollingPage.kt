@@ -1,4 +1,4 @@
-package `in`.dreadedlama.easysync
+package `in`.dreadedlama.quietsync
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement

@@ -1,4 +1,4 @@
-package `in`.dreadedlama.easysync
+package `in`.dreadedlama.quietsync
 
 import android.service.notification.NotificationListenerService
 import android.util.Log
@@ -6,7 +6,7 @@ import com.google.android.gms.tasks.Tasks.await
 import com.google.android.gms.wearable.CapabilityClient
 import com.google.android.gms.wearable.CapabilityInfo
 import com.google.android.gms.wearable.Wearable
-import `in`.dreadedlama.easysync.shared.WearSignal
+import `in`.dreadedlama.quietsync.shared.WearSignal
 import org.apache.commons.lang3.SerializationUtils
 import java.util.concurrent.ExecutionException
 

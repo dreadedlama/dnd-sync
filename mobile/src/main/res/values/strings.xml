@@ -1,5 +1,5 @@
 ﻿<resources>
-    <string name="app_name">EasySync</string>
+    <string name="app_name">QuietSync</string>
 
     <!-- Preference Titles -->
     <string name="permission_header">Other</string>

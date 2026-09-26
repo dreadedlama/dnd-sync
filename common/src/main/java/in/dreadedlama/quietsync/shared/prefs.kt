@@ -1,4 +1,4 @@
-﻿package `in`.dreadedlama.easysync.shared
+﻿package `in`.dreadedlama.quietsync.shared
 enum class PreferenceKeys(val key: String, val defaultValue: Boolean = true){
     WatchDndSync("watch_dnd_sync_key", false),
     DndAsBedtime("dnd_as_bedtime_key", false),

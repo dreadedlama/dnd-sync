@@ -1,4 +1,4 @@
-# EasySync
+# QuietSync
 This App was developed to enable synchronization between the smartphone and the **Galaxy Watch 4** of the
 **Do Not Disturb** (*DND*) and **Bedtime mode** from [Digital Wellbeing](https://play.google.com/store/apps/details?id=com.google.android.apps.wellbeing&hl=en_US).
 *DND* synchronization is only supported officially if using a Samsung phone with this smartwatch, Bedtime mode synchronization
@@ -72,11 +72,11 @@ Note: This is only tested on my Galaxy Watch 4 and it might not work on other de
 2. Install the app `wear-release-signed.apk` on the watch
   * Run `adb install wear-release-signed.apk`
 3. Grant permission for **DND access** (*This allows the app to listen to DND changes and to change the DND setting*)
-  * Run `adb shell cmd notification allow_listener in.dreadedlama.easysync/in.dreadedlama.easysync.DNDNotificationService`
+  * Run `adb shell cmd notification allow_listener in.dreadedlama.quietsync/in.dreadedlama.quietsync.DNDNotificationService`
 4. Grant permission for **Secure Setting access** (*This allows the app to change BedTime mode setting on the watch*)
-  * Run `adb shell pm grant in.dreadedlama.easysync android.permission.WRITE_SECURE_SETTINGS`
+  * Run `adb shell pm grant in.dreadedlama.quietsync android.permission.WRITE_SECURE_SETTINGS`
   * **SAMSUNG WATCH ONLY** - If you want to show the Bedtime screen overlay on your Samsung watch, grant the app permission to show overlay windows:
-      `adb shell appops set in.dreadedlama.easysync SYSTEM_ALERT_WINDOW allow`
+      `adb shell appops set in.dreadedlama.quietsync SYSTEM_ALERT_WINDOW allow`
 5. Open the app on the watch, scroll to the permission section and check if both `DND Permission`, `Secure Settings Permission` and
    `System Alert Windows Permission` say ***Granted*** (*you may need to tap on the menu entries for them to update*)
 6. ***IMPORTANT: Disable `ADB debugging` and `Debug over WIFI`, because these options drain the battery!***
@@ -102,5 +102,5 @@ Note: This is only tested on my Galaxy Watch 4 and it might not work on other de
 * If you enable the setting ***Vibrate on sync***, the watch will vibrate whenever it receives a sync request from the phone
 
 # Note
-If you are unable to "Allow Notification Access" to the mobile app and it is faded, go the apps section in Settings, open EasySync app, click 3 dots on top right and grant "Allow Restricted Settings" access.
+If you are unable to "Allow Notification Access" to the mobile app and it is faded, go the apps section in Settings, open QuietSync app, click 3 dots on top right and grant "Allow Restricted Settings" access.
 Now you'll be able to grant the Notification access to mobile app.

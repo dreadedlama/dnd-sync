@@ -1,4 +1,4 @@
-﻿package `in`.dreadedlama.easysync
+﻿package `in`.dreadedlama.quietsync
 
 import android.content.Context
 import android.content.Intent
@@ -287,7 +287,7 @@ fun MainScreen(context: Context) {
                         }
                     )
 
-                    // Watch Manufacturer (fetched once from the watch, then immutable)
+                    // Watch Manufacturer
                     val manufacturerDisplay = watchManufacturer.ifEmpty { manufacturerUnknown }
                         .replaceFirstChar { if (it.isLowerCase()) it.titlecase() else it.toString() }
                     valueItem(
@@ -343,9 +343,6 @@ class ConfigurationGroupScopeImpl(
         }
     }
 
-    /**
-     * Read-only informational item that displays a dynamic [value] instead of a switch.
-     */
     fun valueItem(
         leadingText: Int,
         value: String,

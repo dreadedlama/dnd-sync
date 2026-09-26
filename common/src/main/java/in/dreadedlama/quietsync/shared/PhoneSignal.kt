@@ -1,4 +1,4 @@
-package `in`.dreadedlama.easysync.shared
+package `in`.dreadedlama.quietsync.shared
 
 import android.content.SharedPreferences
 import java.io.Serializable

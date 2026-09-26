@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android" xmlns:tools="http://schemas.android.com/tools"
-          package="in.dreadedlama.easysync">
+          package="in.dreadedlama.quietsync">
 
     <uses-permission android:name="android.permission.ACCESS_NOTIFICATION_POLICY" />
     <uses-permission android:name="android.permission.VIBRATE" />
@@ -16,10 +16,10 @@
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
         android:supportsRtl="true"
-        android:theme="@style/Theme.EasySync"
+        android:theme="@style/Theme.QuietSync"
         >
         <activity
-            android:name="in.dreadedlama.easysync.MainActivity"
+            android:name="in.dreadedlama.quietsync.MainActivity"
             android:exported="true" android:taskAffinity="">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -44,7 +44,7 @@
             android:value="@integer/google_play_services_version" />
 
         <service
-            android:name="in.dreadedlama.easysync.DNDSyncListenerService"
+            android:name="in.dreadedlama.quietsync.DNDSyncListenerService"
             android:enabled="true"
             android:exported="true">
             <intent-filter>
@@ -65,9 +65,9 @@
             </intent-filter>
         </service>
 
-        <!-- grant permission with: adb shell cmd notification allow_listener in.dreadedlama.easysync/in.dreadedlama.easysync.DNDNotificationService -->
+        <!-- grant permission with: adb shell cmd notification allow_listener in.dreadedlama.quietsync/in.dreadedlama.quietsync.DNDNotificationService -->
         <service
-            android:name="in.dreadedlama.easysync.DNDNotificationService"
+            android:name="in.dreadedlama.quietsync.DNDNotificationService"
             android:enabled="true"
             android:exported="true"
             android:permission="android.permission.BIND_NOTIFICATION_LISTENER_SERVICE">

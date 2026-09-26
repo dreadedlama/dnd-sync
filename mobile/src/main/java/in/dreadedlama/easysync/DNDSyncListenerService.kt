@@ -1,4 +1,4 @@
-package `in`.dreadedlama.easysync
+package `in`.dreadedlama.quietsync
 
 import android.app.NotificationManager
 import android.content.Intent
@@ -6,10 +6,10 @@ import android.util.Log
 import androidx.preference.PreferenceManager
 import com.google.android.gms.wearable.MessageEvent
 import com.google.android.gms.wearable.WearableListenerService
-import `in`.dreadedlama.easysync.shared.MessagePaths
-import `in`.dreadedlama.easysync.shared.PreferenceKeys
-import `in`.dreadedlama.easysync.shared.StringPreferenceKeys
-import `in`.dreadedlama.easysync.shared.WearSignal
+import `in`.dreadedlama.quietsync.shared.MessagePaths
+import `in`.dreadedlama.quietsync.shared.PreferenceKeys
+import `in`.dreadedlama.quietsync.shared.StringPreferenceKeys
+import `in`.dreadedlama.quietsync.shared.WearSignal
 import org.apache.commons.lang3.SerializationUtils
 import androidx.core.net.toUri
 

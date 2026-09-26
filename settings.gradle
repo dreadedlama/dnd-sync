@@ -18,7 +18,7 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "EasySync"
+rootProject.name = "QuietSync"
 include ':mobile'
 include ':wear'
 include ':common'

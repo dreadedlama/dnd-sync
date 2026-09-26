@@ -1,4 +1,4 @@
-package `in`.dreadedlama.easysync
+package `in`.dreadedlama.quietsync
 
 import android.app.NotificationManager
 import android.content.ComponentName
@@ -12,9 +12,9 @@ import com.google.android.gms.tasks.Tasks
 import com.google.android.gms.wearable.MessageEvent
 import com.google.android.gms.wearable.Wearable
 import com.google.android.gms.wearable.WearableListenerService
-import `in`.dreadedlama.easysync.shared.MessagePaths
-import `in`.dreadedlama.easysync.shared.PhoneSignal
-import `in`.dreadedlama.easysync.shared.StringPreferenceKeys
+import `in`.dreadedlama.quietsync.shared.MessagePaths
+import `in`.dreadedlama.quietsync.shared.PhoneSignal
+import `in`.dreadedlama.quietsync.shared.StringPreferenceKeys
 import org.apache.commons.lang3.SerializationUtils
 
 

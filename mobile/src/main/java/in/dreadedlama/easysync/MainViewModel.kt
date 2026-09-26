@@ -1,4 +1,4 @@
-﻿package `in`.dreadedlama.easysync
+﻿package `in`.dreadedlama.quietsync
 
 import android.app.Application
 import android.app.NotificationManager
@@ -12,9 +12,9 @@ import androidx.lifecycle.viewModelScope
 import androidx.preference.PreferenceManager
 import com.google.android.gms.wearable.CapabilityClient
 import com.google.android.gms.wearable.Wearable
-import `in`.dreadedlama.easysync.shared.MessagePaths
-import `in`.dreadedlama.easysync.shared.PreferenceKeys
-import `in`.dreadedlama.easysync.shared.StringPreferenceKeys
+import `in`.dreadedlama.quietsync.shared.MessagePaths
+import `in`.dreadedlama.quietsync.shared.PreferenceKeys
+import `in`.dreadedlama.quietsync.shared.StringPreferenceKeys
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch

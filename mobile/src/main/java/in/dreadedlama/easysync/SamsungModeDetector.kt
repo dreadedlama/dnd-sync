@@ -1,4 +1,4 @@
-package `in`.dreadedlama.easysync
+package `in`.dreadedlama.quietsync
 
 import android.content.Context
 import android.database.ContentObserver
@@ -6,7 +6,7 @@ import android.os.Handler
 import android.os.Looper
 import android.provider.Settings
 import android.util.Log
-import `in`.dreadedlama.easysync.shared.PhoneSignal
+import `in`.dreadedlama.quietsync.shared.PhoneSignal
 
 //Detects Samsung "Modes and Routines" changes by observing the `mode_id` setting.
 class SamsungModeDetector(context: Context, private val listener: ModeChangeListener) {
