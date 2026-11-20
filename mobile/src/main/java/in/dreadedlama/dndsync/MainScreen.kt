@@ -1,8 +1,10 @@
 package `in`.dreadedlama.dndsync
 
+import android.app.TimePickerDialog
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
+import android.text.format.DateFormat
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Column
@@ -45,6 +47,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.viewmodel.compose.viewModel
+import java.util.Date
+import java.util.TimeZone
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
@@ -62,8 +66,13 @@ fun MainScreen(context: Context) {
     val connectivityState by viewModel.connectivityState.collectAsState()
     val watchManufacturer by viewModel.watchManufacturer.collectAsState()
     val samsungModeSync by viewModel.samsungModeSync.collectAsState()
+    val bedtimeWindowEnabled by viewModel.bedtimeWindowEnabled.collectAsState()
+    val bedtimeWindow by viewModel.bedtimeWindow.collectAsState()
     val permissionsGranted = dndPermissionGranted && notificationState
     var isDialogOpen by remember { mutableStateOf(false) }
+    // phone time format; UTC so that the time zone doesn't shift the minutes of the day
+    val is24Hour = DateFormat.is24HourFormat(context)
+    val timeFormat = remember { DateFormat.getTimeFormat(context).apply { timeZone = TimeZone.getTimeZone("UTC") } }
 
     val lifecycleOwner = LocalLifecycleOwner.current
     val state by lifecycleOwner.lifecycle.currentStateFlow.collectAsState()
@@ -175,6 +184,40 @@ fun MainScreen(context: Context) {
                         checked = dndAsBedtime,
                         onCheckedChange = { viewModel.setDndAsBedtime(it) },
                         enabled = dndSync && permissionsGranted,
+                    )
+
+                    // Bedtime time window Switch
+                    item(
+                        leadingText = R.string.bedtime_window_title,
+                        icon = {
+                            Icon(painterResource(R.drawable.bedtime), contentDescription = "Bedtime window")
+                        },
+                        checked = bedtimeWindowEnabled,
+                        onCheckedChange = { viewModel.setBedtimeWindowEnabled(it) },
+                        enabled = dndAsBedtime && dndSync && permissionsGranted,
+                    )
+
+                    // Bedtime time window (start, end)
+                    valueItem(
+                        leadingText = R.string.bedtime_window_time,
+                        value = "${timeFormat.format(Date(bedtimeWindow.first * 60_000L))} – " +
+                                timeFormat.format(Date(bedtimeWindow.second * 60_000L)),
+                        icon = {
+                            Icon(painterResource(R.drawable.bedtime), contentDescription = "Bedtime window")
+                        },
+                        onClick = {
+                            // pick start, then end; only saved once both are picked
+                            TimePickerDialog(context, { _, startH, startM ->
+                                TimePickerDialog(context, { _, endH, endM ->
+                                    viewModel.setBedtimeWindow(startH * 60 + startM, endH * 60 + endM)
+                                }, bedtimeWindow.second / 60, bedtimeWindow.second % 60, is24Hour).apply {
+                                    setTitle(R.string.bedtime_window_end)
+                                }.show()
+                            }, bedtimeWindow.first / 60, bedtimeWindow.first % 60, is24Hour).apply {
+                                setTitle(R.string.bedtime_window_start)
+                            }.show()
+                        },
+                        enabled = bedtimeWindowEnabled && dndAsBedtime && dndSync && permissionsGranted,
                     )
 
                     // Bedtime Sync Switch
@@ -377,22 +420,25 @@ class ConfigurationGroupScopeImpl(
     }
 
     /**
-     * Read-only informational item that displays a dynamic [value] instead of a switch.
+     * Informational item that displays a dynamic [value] instead of a switch.
+     * Read-only unless [onClick] is set.
      */
     fun valueItem(
         leadingText: Int,
         value: String,
         icon: @Composable (() -> Unit)? = null,
+        onClick: (() -> Unit)? = null,
+        enabled: Boolean = onClick != null,
     ) {
         items.add { index, total ->
             ConfigurationItem(
                 checked = null,
-                onCheckedChange = null,
+                onCheckedChange = onClick?.let { { _: Boolean -> it() } },
                 leadingText = leadingText,
                 supportingText = null,
                 supportingTextValue = value,
                 icon = icon,
-                enabled = false,
+                enabled = enabled,
                 index = index,
                 total = total
             )
