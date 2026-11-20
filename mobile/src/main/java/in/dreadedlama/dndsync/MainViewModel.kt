@@ -12,6 +12,7 @@ import androidx.lifecycle.viewModelScope
 import androidx.preference.PreferenceManager
 import com.google.android.gms.wearable.CapabilityClient
 import com.google.android.gms.wearable.Wearable
+import `in`.dreadedlama.dndsync.shared.IntPreferenceKeys
 import `in`.dreadedlama.dndsync.shared.MessagePaths
 import `in`.dreadedlama.dndsync.shared.PreferenceKeys
 import `in`.dreadedlama.dndsync.shared.StringPreferenceKeys
@@ -60,6 +61,14 @@ class MainViewModel(val app: Application) : AndroidViewModel(app) {
     private val _samsungModeSync = MutableStateFlow(false)
     val samsungModeSync: StateFlow<Boolean> = _samsungModeSync
 
+    // Bedtime Window State
+    private val _bedtimeWindowEnabled = MutableStateFlow(false)
+    val bedtimeWindowEnabled: StateFlow<Boolean> = _bedtimeWindowEnabled
+
+    // Bedtime window (start, end) in minutes of the day
+    private val _bedtimeWindow = MutableStateFlow(0 to 0)
+    val bedtimeWindow: StateFlow<Pair<Int, Int>> = _bedtimeWindow
+
     // Only meaningful on Samsung phones (mode_id system setting)
     val isSamsungDevice: Boolean = Build.MANUFACTURER.equals("samsung", ignoreCase = true)
 
@@ -102,6 +111,14 @@ class MainViewModel(val app: Application) : AndroidViewModel(app) {
         _watchSync.value = preferencesHelper.getValue(PreferenceKeys.WatchDndSync)
         _watchVibrate.value = preferencesHelper.getValue(PreferenceKeys.WatchVibrate)
         _samsungModeSync.value = preferencesHelper.getValue(PreferenceKeys.SamsungModeSync)
+        _bedtimeWindowEnabled.value = preferencesHelper.getValue(PreferenceKeys.BedtimeWindow)
+        _bedtimeWindow.value = preferencesHelper.getInt(
+            IntPreferenceKeys.BEDTIME_WINDOW_START,
+            IntPreferenceKeys.BEDTIME_WINDOW_START_DEFAULT
+        ) to preferencesHelper.getInt(
+            IntPreferenceKeys.BEDTIME_WINDOW_END,
+            IntPreferenceKeys.BEDTIME_WINDOW_END_DEFAULT
+        )
 
         _dndPermissionGranted.value = checkDNDPermission()
         _notificationState.value = isNotificationListenerEnabled(app)
@@ -214,6 +231,17 @@ class MainViewModel(val app: Application) : AndroidViewModel(app) {
     fun setSamsungModeSync(value: Boolean) {
         _samsungModeSync.value = value
         preferencesHelper.setValue(PreferenceKeys.SamsungModeSync, value)
+    }
+
+    fun setBedtimeWindowEnabled(value: Boolean) {
+        _bedtimeWindowEnabled.value = value
+        preferencesHelper.setValue(PreferenceKeys.BedtimeWindow, value)
+    }
+
+    fun setBedtimeWindow(start: Int, end: Int) {
+        _bedtimeWindow.value = start to end
+        preferencesHelper.setInt(IntPreferenceKeys.BEDTIME_WINDOW_START, start)
+        preferencesHelper.setInt(IntPreferenceKeys.BEDTIME_WINDOW_END, end)
     }
 
     fun requestDNDPermission() {

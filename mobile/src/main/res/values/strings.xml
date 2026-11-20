@@ -19,6 +19,11 @@
     <string name="sync_dnd_as_bedtime_title">Enable Bedtime mode on DND sync</string>
     <string name="sync_dnd_as_bedtime_desc">If enabled, DND changes on the phone will enable/disable Bedtime mode on the watch</string>
 
+    <string name="bedtime_window_title">Limit Bedtime mode to a time window</string>
+    <string name="bedtime_window_time">Time window</string>
+    <string name="bedtime_window_start">Bedtime window start</string>
+    <string name="bedtime_window_end">Bedtime window end</string>
+
     <string name="enable_power_saving_title">Enable Power Save mode with Bedtime</string>
     <string name="enable_power_saving_desc">Bedtime mode will also enable power save mode on the watch</string>
 

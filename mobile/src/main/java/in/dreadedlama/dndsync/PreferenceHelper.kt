@@ -22,4 +22,12 @@ class PreferencesHelper(context: Context) {
     fun setString(key: String, value: String) {
         prefs.edit().putString(key, value).apply()
     }
+
+    fun getInt(key: String, defaultValue: Int): Int {
+        return prefs.getInt(key, defaultValue)
+    }
+
+    fun setInt(key: String, value: Int) {
+        prefs.edit().putInt(key, value).apply()
+    }
 }

@@ -9,6 +9,17 @@ enum class PreferenceKeys(val key: String, val defaultValue: Boolean = true){
     DndSync("dnd_sync_key", true),
     WatchVibrate("watch_vibrate_key", false),
     SamsungModeSync("samsung_mode_sync_key", false),
+    BedtimeWindow("bedtime_window_key", false),
+}
+
+// Bedtime time window for "Enable Bedtime mode on DND sync", stored as minutes of the day
+object IntPreferenceKeys {
+    const val BEDTIME_WINDOW_START = "bedtime_window_start_key"
+    const val BEDTIME_WINDOW_END = "bedtime_window_end_key"
+
+    // defaults: 22:00 - 08:00
+    const val BEDTIME_WINDOW_START_DEFAULT = 22 * 60
+    const val BEDTIME_WINDOW_END_DEFAULT = 8 * 60
 }
 
 object StringPreferenceKeys {

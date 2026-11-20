@@ -2,6 +2,7 @@ package `in`.dreadedlama.dndsync.shared
 
 import android.content.SharedPreferences
 import java.io.Serializable
+import java.time.LocalTime
 
 class PhoneSignal : Serializable {
     // dndState and bedtimeState will be null if the signal to sent is not related
@@ -41,11 +42,22 @@ class PhoneSignal : Serializable {
         if (0 <= dndState && dndState <= 4) {
             this.dndState = dndState
 
-            if (dndAsBedtime && dndState > 1) {
+            // only treat DND as bedtime inside the configured time window (minutes of the day)
+            val windowEnabled = prefs.getBoolean(PreferenceKeys.BedtimeWindow.key, PreferenceKeys.BedtimeWindow.defaultValue)
+            val start = prefs.getInt(IntPreferenceKeys.BEDTIME_WINDOW_START, IntPreferenceKeys.BEDTIME_WINDOW_START_DEFAULT)
+            val end = prefs.getInt(IntPreferenceKeys.BEDTIME_WINDOW_END, IntPreferenceKeys.BEDTIME_WINDOW_END_DEFAULT)
+            val now = LocalTime.now().let { it.hour * 60 + it.minute }
+            val inWindow = when {
+                !windowEnabled -> true // no time restriction
+                start < end -> now in start until end
+                else -> now >= start || now < end // window spans midnight
+            }
+
+            if (dndAsBedtime && dndState > 1 && inWindow) {
                 // dndState > 1 means that it's enabled
                 this.bedtimeState = 1
             } else if (dndAsBedtime) {
-                // in this branch dndState < 1, so it's disabled
+                // in this branch dndState <= 1 (disabled) or we are outside the time window
                 this.bedtimeState = 0
             }
         } else if (dndState == 5 || dndState == 6) {
